@@ -1,5 +1,3 @@
-import React from 'react'
-
 const guidelines = [
   'No birding at the expense of the well-being/security of birds.',
   'Use of any external noise-producing or bird-call-producing device/app (like Merlin) to attract birds is prohibited.',
@@ -21,13 +19,13 @@ const guidelines = [
 const Guidelines = () => (
   <div className="max-w-2xl mx-auto py-12 px-4 space-y-6">
     <h1 className="section-header text-center mb-6">Guidelines</h1>
-    <p className="text-gray-700 mb-4">
+    <p className="text-black text-opacity-80 dark:text-slate-300 mb-4">
       Please follow these guidelines to ensure ethical, safe, and enjoyable bird-watching for all, and to protect our avian friends and their habitats:
     </p>
-    <ul className="list-disc pl-6 space-y-2 text-gray-800">
+    <ul className="list-disc pl-6 space-y-2 text-slate-800 dark:text-slate-200">
       {guidelines.map((g, i) => <li key={i}>{g}</li>)}
     </ul>
-    <p className="text-gray-500 text-sm mt-6">
+    <p className="text-slate-500 dark:text-slate-400 text-sm mt-6">
       These include official guidelines published by the Government of Uttarakhand (2023) for conservation, adapted for the urban context of Roorkee.
     </p>
   </div>

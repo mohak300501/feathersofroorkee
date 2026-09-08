@@ -1,10 +1,13 @@
 {
-  "name": "blazing-feathers-functions",
+  "name": "feathers-of-roorkee-functions",
   "version": "1.0.0",
-  "description": "Netlify serverless functions for Blazing Feathers",
+  "description": "Netlify serverless functions for Feathers of Roorkee",
   "main": "index.js",
   "type": "commonjs",
   "engines": {
-    "node": "18.x"
+    "node": "26.x"
+  },
+  "dependencies": {
+    "mongodb": "7.5.0"
   }
-} 
+}

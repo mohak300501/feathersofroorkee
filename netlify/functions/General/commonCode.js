@@ -2,7 +2,7 @@ function generateCommonCode(commonName) {
   // Split the common name on spaces and hyphens
   const words = commonName.split(/[\s-]+/).filter(word => word.length > 0);
   
-  let code = '';
+  let code;
   
   if (words.length === 1) {
     // 1 word: first 4 letters

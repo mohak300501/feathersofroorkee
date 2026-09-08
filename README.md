@@ -1,4 +1,4 @@
-# Blazing Feathers - Bird Photography Webapp
+# Feathers of Roorkee - Bird Photography Webapp
 
 A beautiful, modern web application for bird photography enthusiasts. Built with React, Firebase, and Google Drive integration.
 
