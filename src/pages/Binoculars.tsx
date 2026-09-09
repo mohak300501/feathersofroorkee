@@ -147,7 +147,7 @@ const Binoculars = () => {
     await refreshPage(transactionPage)
   }
 
-  const handleScan = async (payload: string) => {
+  const handleScan = useCallback(async (payload: string) => {
     if (!user) return
     const response = await fetch('/api/Binoculars/scanBinocular', {
       method: 'POST',
@@ -158,7 +158,7 @@ const Binoculars = () => {
     if (!response.ok || !data.success) throw new Error(data.error || 'Invalid binocular QR')
     setShowScanModal(false)
     setScannedBinocular(data.binocular)
-  }
+  }, [user])
 
   const handleBorrow = async () => {
     if (!user || !scannedBinocular) return

@@ -9,56 +9,131 @@ interface Props {
 
 const ScanModal = ({ onClose, onScanned }: Props) => {
   const scannerRef = useRef<Html5Qrcode | null>(null)
+  const mountedRef = useRef(true)
+  const processingRef = useRef(false)
+  const startedRef = useRef(false)
+
   const [error, setError] = useState('')
-  const [scanning, setScanning] = useState(true)
 
   useEffect(() => {
-    let mounted = true
-    const start = async () => {
+    mountedRef.current = true
+
+    const startScanner = async () => {
+      const scanner = new Html5Qrcode('binocular-qr-reader')
+      scannerRef.current = scanner
+
       try {
-        const scanner = new Html5Qrcode('binocular-qr-reader')
-        scannerRef.current = scanner
         await scanner.start(
           { facingMode: 'environment' },
-          { fps: 10, qrbox: { width: 260, height: 260 } },
-          async (decodedText) => {
-            if (!mounted || !scanning) return
-            setScanning(false)
-            try {
-              await scanner.stop()
-            } catch {}
-            await onScanned(decodedText)
+          {
+            fps: 10,
+            qrbox: { width: 260, height: 260 },
           },
-          () => {}
+          async (decodedText) => {
+            // Ignore scans after unmount or while another scan is being processed.
+            if (!mountedRef.current || processingRef.current) {
+              return
+            }
+
+            processingRef.current = true
+
+            try {
+              // Stop the scanner exactly once.
+              if (startedRef.current) {
+                try {
+                  await scanner.stop()
+                } catch {
+                  // Scanner may already have stopped; ignore this.
+                }
+
+                startedRef.current = false
+              }
+
+              // Validate/use the decoded QR.
+              if (mountedRef.current) {
+                await onScanned(decodedText)
+              }
+            } catch (e: any) {
+              if (mountedRef.current) {
+                setError(e?.message || 'Failed to process the QR code.')
+                processingRef.current = false
+              }
+            }
+          },
+          () => {
+            // Ignore scan failures while the camera is searching.
+          }
         )
+
+        startedRef.current = true
       } catch (e: any) {
-        if (mounted) setError(e.message || 'Could not access the camera. Check browser camera permissions.')
+        if (mountedRef.current) {
+          setError(
+            e?.message ||
+              'Could not access the camera. Check browser camera permissions.'
+          )
+        }
       }
     }
-    start()
+
+    startScanner()
 
     return () => {
-      mounted = false
+      mountedRef.current = false
+
       const scanner = scannerRef.current
-      if (scanner) {
-        scanner.stop().catch(() => {}).finally(() => {
-          scanner.clear().catch(() => {})
-        })
+
+      if (!scanner) {
+        return
       }
+
+      // Prevent any further decode handling.
+      processingRef.current = true
+
+      const cleanup = async () => {
+        if (startedRef.current) {
+          try {
+            await scanner.stop()
+          } catch {
+            // Already stopped/not running; safe to ignore.
+          }
+
+          startedRef.current = false
+        }
+
+        // IMPORTANT:
+        // clear() is synchronous and does NOT return a Promise.
+        try {
+          scanner.clear()
+        } catch {
+          // Safe to ignore cleanup errors.
+        }
+
+        scannerRef.current = null
+      }
+
+      cleanup()
     }
-    // scanner starts only once for this modal instance
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [onScanned])
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="glass rounded-2xl w-full max-w-lg p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Scan Binocular QR</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Point the camera at the QR sticker.</p>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+              Scan Binocular QR
+            </h3>
+
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Point the camera at the QR sticker.
+            </p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
