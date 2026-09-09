@@ -1,6 +1,7 @@
-import { Github, ExternalLink, Dna, Bird, Camera, Users, Eye } from 'lucide-react'
+import { ExternalLink, Dna, Bird, Camera, Users, Eye } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+// import github from '../../public/github.svg'
 
 const Footer = () => {
   const currentYear = new Date().getFullYear()
@@ -90,7 +91,7 @@ const Footer = () => {
               rel="noopener noreferrer"
               className="flex items-center space-x-1 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
-              <Github className="h-4 w-4" />
+              <img src="/github-color.svg" alt="GitHub" className="h-4 w-4 dark:invert" />
               <span>GitHub</span>
               <ExternalLink className="h-3 w-3" />
             </a>

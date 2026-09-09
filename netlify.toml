@@ -4,7 +4,12 @@
   command = "npm run build"
 
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "26"
+
+[dev]
+  command = "vite"
+  port = 3000
+  targetPort = 5173
 
 [[redirects]]
   from = "/api/*"
@@ -26,8 +31,3 @@
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin" 
-
-[dev]
-  command = "vite"
-  port = 3000
-  targetPort = 5173

@@ -18,6 +18,7 @@ const BirdDetail = lazy(() => import('./pages/BirdDetail'))
 const AdminPanel = lazy(() => import('./pages/AdminPanel'))
 const LeaderBoard = lazy(() => import('./pages/LeaderBoard'))
 const CheckList = lazy(() => import('./pages/CheckList'))
+const Binoculars = lazy(() => import('./pages/Binoculars'))
 const Profile = lazy(() => import('./pages/Profile'))
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
             <Route path="/bird/:commonCode" element={<BirdDetail />} />
             <Route path="/leaderboard" element={<LeaderBoard />} />
             <Route path="/checklist" element={<CheckList />} />
+            <Route path="/binoculars" element={<Binoculars />} />
             <Route path="/about" element={<About />} />
             <Route path="/author" element={<Author />} />
             <Route path="/guidelines" element={<Guidelines />} />
