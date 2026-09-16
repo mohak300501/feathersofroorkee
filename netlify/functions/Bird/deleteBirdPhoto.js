@@ -46,7 +46,7 @@ exports.handler = async (event, context) => {
     const birdObjectId = new ObjectId(birdId);
 
     // Get the photo document
-    const photoDoc = await db.collection('photos').findOne({ _id: photoObjectId, birdId: birdObjectId });
+    const photoDoc = await db.collection('birdPhotos').findOne({ _id: photoObjectId, birdId: birdObjectId });
     if (!photoDoc) {
       return {
         statusCode: 404,
@@ -88,7 +88,7 @@ exports.handler = async (event, context) => {
     }
 
     // Delete from MongoDB
-    await db.collection('photos').deleteOne({ _id: photoObjectId });
+    await db.collection('birdPhotos').deleteOne({ _id: photoObjectId });
 
     // Update bird's photo count and potentially featured photo
     const birdDoc = await db.collection('birds').findOne({ _id: birdObjectId });
@@ -99,7 +99,7 @@ exports.handler = async (event, context) => {
     const deletedPhotoIdForFeatured = photoDoc.imagekitFilePath;
     if (birdDoc && birdDoc.featuredPhoto === deletedPhotoIdForFeatured) {
       // Find the most recently uploaded photo for this bird to set as new featured
-      const latestPhoto = await db.collection('photos')
+      const latestPhoto = await db.collection('birdPhotos')
         .find({ birdId: birdObjectId })
         .sort({ addedAt: -1 })
         .limit(1)

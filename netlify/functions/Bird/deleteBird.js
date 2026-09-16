@@ -43,7 +43,7 @@ exports.handler = async (event, context) => {
     const birdObjectId = new ObjectId(birdId);
 
     // Get all photos for this bird
-    const photos = await db.collection('photos').find({ birdId: birdObjectId }).toArray();
+    const photos = await db.collection('birdPhotos').find({ birdId: birdObjectId }).toArray();
 
     // Initialize Google Drive API
     let drive;
@@ -75,7 +75,7 @@ exports.handler = async (event, context) => {
     }
 
     // Delete all photos from MongoDB
-    await db.collection('photos').deleteMany({ birdId: birdObjectId });
+    await db.collection('birdPhotos').deleteMany({ birdId: birdObjectId });
 
     // Delete the bird
     await db.collection('birds').deleteOne({ _id: birdObjectId });

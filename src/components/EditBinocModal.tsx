@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import toast from 'react-hot-toast'
-import type { Binocular } from '../pages/Binoculars'
+import type { Binocular } from '../interfaces/Binoc'
 
 interface Props {
   binocular: Binocular

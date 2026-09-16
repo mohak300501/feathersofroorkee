@@ -17,7 +17,9 @@ exports.handler = async (event, context) => {
   if (method) return method;
 
   try {
-    const { userId, make: rawMake, physicalId: rawPhysicalId } = JSON.parse(event.body || '{}');
+    const { make: rawMake, physicalId: rawPhysicalId } = JSON.parse(event.body || '{}');
+    const userId = await getAuthenticatedUserId(event);
+    if (!userId) return response(401, { error: 'Authentication required' });
     const make = validateString(rawMake, 'Make');
     const physicalId = validateString(rawPhysicalId, 'Physical ID');
 

@@ -1,40 +1,26 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Binoculars as BinocularsIcon, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight,
-          Edit3, Eye, PackageCheck, Plus, QrCode, Trash2, User, XCircle } from 'lucide-react'
+import {
+  Binoculars as BinocularsIcon, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight,
+  Edit3, Eye, PackageCheck, Plus, QrCode, Trash2, User, XCircle
+} from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../contexts/AuthContext'
 import AddBinocModal from '../components/AddBinocModal'
 import EditBinocModal from '../components/EditBinocModal'
-import ScanModal from '../components/ScanModal'
-import BorrowModal, { ScannedBinocular } from '../components/BorrowModal'
-
-export interface Binocular {
-  binocId: string
-  make: string
-  physicalId: string
-  addedAt: string
-  hash: string
-}
-
-export interface InventoryRow {
-  make: string
-  available: number
-  total: number
-}
-
-export interface TransactionRow {
-  transactionId: string
-  binocId: string
-  username: string
-  physicalId: string
-  borrowedAt: string
-  returnedAt: string | null
-}
+import ScanModal from '../components/ScanBinocModal'
+import BorrowModal, { ScannedBinocular } from '../components/BorrowBinocModal'
+import type { Binocular, InventoryRow, TransactionRow } from '../interfaces/Binoc'
 
 const Binoculars = () => {
   const { user, isAdmin } = useAuth()
   const navigate = useNavigate()
+
+  const getAuthHeaders = useCallback(async (): Promise<HeadersInit> => {
+    if (!user) throw new Error('Authentication required')
+    const token = await user.getIdToken()
+    return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+  }, [user])
 
   const [binoculars, setBinoculars] = useState<Binocular[]>([])
   const [inventory, setInventory] = useState<InventoryRow[]>([])
@@ -51,11 +37,12 @@ const Binoculars = () => {
 
   const fetchAdminBinoculars = useCallback(async () => {
     if (!user || !isAdmin) return
-    const response = await fetch(`/api/Binoculars/getBinoculars?userId=${encodeURIComponent(user.uid)}`)
+    const headers = await getAuthHeaders()
+    const response = await fetch('/api/Binoculars/getBinoculars', { headers })
     const data = await response.json()
     if (!response.ok || !data.success) throw new Error(data.error || 'Failed to load binoculars')
     setBinoculars(data.binoculars || [])
-  }, [user, isAdmin])
+  }, [getAuthHeaders, user, isAdmin])
 
   const fetchInventory = useCallback(async () => {
     const response = await fetch('/api/Binoculars/getInventory')
@@ -95,11 +82,11 @@ const Binoculars = () => {
   }, [isAdmin, user?.uid])
 
   const handleAdd = async (make: string, physicalId: string) => {
-    if (!user) return
+    if (!user || !isAdmin) return
     const response = await fetch('/api/Binoculars/addBinocular', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.uid, make, physicalId }),
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({ make, physicalId })
     })
     const data = await response.json()
     if (!response.ok || !data.success) throw new Error(data.error || 'Failed to add binocular')
@@ -109,16 +96,11 @@ const Binoculars = () => {
   }
 
   const handleEdit = async (make: string, physicalId: string) => {
-    if (!user || !selectedBinocular) return
+    if (!user || !isAdmin || !selectedBinocular) return
     const response = await fetch('/api/Binoculars/editBinocular', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: user.uid,
-        binocId: selectedBinocular.binocId,
-        make,
-        physicalId,
-      }),
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({ binocId: selectedBinocular.binocId, make, physicalId })
     })
     const data = await response.json()
     if (!response.ok || !data.success) throw new Error(data.error || 'Failed to update binocular')
@@ -129,14 +111,14 @@ const Binoculars = () => {
   }
 
   const handleDelete = async (binoc: Binocular) => {
-    if (!user) return
+    if (!user || !isAdmin) return
     const confirmed = window.confirm(`Delete binocular ${binoc.physicalId}? This cannot be undone.`)
     if (!confirmed) return
 
     const response = await fetch('/api/Binoculars/deleteBinocular', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.uid, binocId: binoc.binocId }),
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({ binocId: binoc.binocId }),
     })
     const data = await response.json()
     if (!response.ok || !data.success) {
@@ -151,8 +133,8 @@ const Binoculars = () => {
     if (!user) return
     const response = await fetch('/api/Binoculars/scanBinocular', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.uid, payload }),
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({ payload }),
     })
     const data = await response.json()
     if (!response.ok || !data.success) throw new Error(data.error || 'Invalid binocular QR')
@@ -164,8 +146,8 @@ const Binoculars = () => {
     if (!user || !scannedBinocular) return
     const response = await fetch('/api/Binoculars/borrowBinocular', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.uid, binocId: scannedBinocular.binocId }),
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({ binocId: scannedBinocular.binocId }),
     })
     const data = await response.json()
     if (!response.ok || !data.success) throw new Error(data.error || 'Unable to borrow binocular')
@@ -179,8 +161,8 @@ const Binoculars = () => {
     if (!user || !scannedBinocular) return
     const response = await fetch('/api/Binoculars/returnBinocular', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.uid, binocId: scannedBinocular.binocId }),
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({ binocId: scannedBinocular.binocId }),
     })
     const data = await response.json()
     if (!response.ok || !data.success) throw new Error(data.error || 'Unable to return binocular')
@@ -409,11 +391,10 @@ const Binoculars = () => {
               <button
                 key={page}
                 onClick={() => handleTransactionPage(page)}
-                className={`min-w-10 px-3 py-2 rounded-lg text-sm font-semibold ${
-                  page === transactionPage
+                className={`min-w-10 px-3 py-2 rounded-lg text-sm font-semibold ${page === transactionPage
                     ? 'bg-primary-600 text-white'
                     : 'border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
-                }`}
+                  }`}
               >
                 {page}
               </button>

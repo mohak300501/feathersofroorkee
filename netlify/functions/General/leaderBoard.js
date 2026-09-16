@@ -19,7 +19,7 @@ exports.handler = async (event, context) => {
     const db = await connectToDatabase(context);
 
     // Leaderboard for Photo Count
-    const photoLeaders = await db.collection('photos').aggregate([
+    const photoLeaders = await db.collection('birdPhotos').aggregate([
       {
         $group: {
           _id: '$userId',

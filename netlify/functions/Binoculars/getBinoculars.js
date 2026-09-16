@@ -7,6 +7,7 @@ const {
   ensureIndexes,
   publicBinocular,
 } = require('./common');
+const { getAuthenticatedUserId } = require('../firebaseAdmin');
 
 exports.handler = async (event, context) => {
   const options = handleOptions(event);
@@ -15,10 +16,13 @@ exports.handler = async (event, context) => {
   if (method) return method;
 
   try {
-    const params = event.queryStringParameters || {};
     const db = await connectToDatabase(context);
     await ensureIndexes(db);
-    await requireAdmin(db, params.userId);
+
+    const userId = await getAuthenticatedUserId(event);
+    if (!userId) { return response(401, { error: 'Authentication required' }); }
+
+    await requireAdmin(db, userId);
 
     const binoculars = await db.collection('binoculars')
       .find({})

@@ -19,7 +19,7 @@ exports.handler = async (event, context) => {
     const db = await connectToDatabase(context);
 
     // 1. Total photos
-    const totalPhotos = await db.collection('photos').countDocuments();
+    const totalPhotos = await db.collection('birdPhotos').countDocuments();
 
     // 2. Total bird species
     const totalBirds = await db.collection('birds').countDocuments();

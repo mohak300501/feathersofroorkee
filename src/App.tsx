@@ -19,6 +19,7 @@ const AdminPanel = lazy(() => import('./pages/AdminPanel'))
 const LeaderBoard = lazy(() => import('./pages/LeaderBoard'))
 const CheckList = lazy(() => import('./pages/CheckList'))
 const Binoculars = lazy(() => import('./pages/Binoculars'))
+const Poems = lazy(() => import('./pages/Poems'))
 const Profile = lazy(() => import('./pages/Profile'))
 
 function App() {
@@ -47,9 +48,10 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/bird/:commonCode" element={<BirdDetail />} />
+            <Route path="/binoculars" element={<Binoculars />} />
             <Route path="/leaderboard" element={<LeaderBoard />} />
             <Route path="/checklist" element={<CheckList />} />
-            <Route path="/binoculars" element={<Binoculars />} />
+            <Route path="/poems" element={<Poems />} />
             <Route path="/about" element={<About />} />
             <Route path="/author" element={<Author />} />
             <Route path="/guidelines" element={<Guidelines />} />

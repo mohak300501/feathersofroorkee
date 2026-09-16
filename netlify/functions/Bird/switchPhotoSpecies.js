@@ -45,7 +45,7 @@ exports.handler = async (event, context) => {
     const newBirdObjectId = new ObjectId(newBirdId);
 
     // Get the photo document
-    const photoDoc = await db.collection('photos').findOne({ _id: photoObjectId, birdId: oldBirdObjectId });
+    const photoDoc = await db.collection('birdPhotos').findOne({ _id: photoObjectId, birdId: oldBirdObjectId });
     if (!photoDoc) {
       return {
         statusCode: 404,
@@ -74,7 +74,7 @@ exports.handler = async (event, context) => {
     }
 
     // Move the photo to the new bird
-    await db.collection('photos').updateOne(
+    await db.collection('birdPhotos').updateOne(
       { _id: photoObjectId },
       {
         $set: {
@@ -90,7 +90,7 @@ exports.handler = async (event, context) => {
 
     if (oldBirdDoc && oldBirdDoc.featuredPhoto === photoDoc.fileId) {
       // Pick a new featured photo
-      const latestPhoto = await db.collection('photos')
+      const latestPhoto = await db.collection('birdPhotos')
         .find({ birdId: oldBirdObjectId })
         .sort({ addedAt: -1 }) // user changed this in getBird.js to addedAt
         .limit(1)

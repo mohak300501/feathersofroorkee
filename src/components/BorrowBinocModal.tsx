@@ -1,5 +1,5 @@
 import { CheckCircle2, CircleSlash2, RotateCcw, X } from 'lucide-react'
-import type { Binocular } from '../pages/Binoculars'
+import type { Binocular } from '../interfaces/Binoc'
 
 export interface ScannedBinocular extends Binocular {
   status: 'Available' | 'Borrowed' | 'Unavailable'
