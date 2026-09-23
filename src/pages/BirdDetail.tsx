@@ -8,7 +8,7 @@ import BirdPhotos from '../components/BirdPhotos'
 import BirdSightings from '../components/BirdSightings'
 import BirdSightingsMap from '../components/BirdSightingsMap'
 import LoadingSpinner from '../components/LoadingSpinner'
-import { Bird, Camera, Eye, Edit, Trash2, ArrowLeft } from 'lucide-react'
+import { Bird, Camera, Eye, Edit, Trash2 } from 'lucide-react'
 import { IUCN_STATUS_MAP } from '../utils/iucn_map'
 import toast from 'react-hot-toast'
 import EditBirdModal from '../components/EditBirdModal'
@@ -356,7 +356,6 @@ const BirdDetail = () => {
 
   return (
     <div className="space-y-12 animate-fade-in relative z-10 py-6">
-      <button onClick={() => navigate('/')} className="flex items-center space-x-2 text-slate-500 hover:text-primary-600 transition-colors mb-4"><ArrowLeft className="w-4 h-4" /><span>Back to Home</span></button>
 
       <div className="text-center space-y-4 glass rounded-3xl p-10 max-w-4xl mx-auto shadow-2xl relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary-400/10 to-bird-400/10 dark:from-primary-900/20 dark:to-bird-900/20 pointer-events-none" />

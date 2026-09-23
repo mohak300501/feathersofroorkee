@@ -6,6 +6,7 @@ const {
   requireUser,
   ensureIndexes,
 } = require('./common');
+const { getAuthenticatedUserId } = require('../firebaseAdmin');
 
 exports.handler = async (event, context) => {
   const options = handleOptions(event);
@@ -14,7 +15,9 @@ exports.handler = async (event, context) => {
   if (method) return method;
 
   try {
-    const { userId, binocId } = JSON.parse(event.body || '{}');
+    const { binocId } = JSON.parse(event.body || '{}');
+    const userId = await getAuthenticatedUserId(event);
+    if (!userId) return response(401, { error: 'Authentication required' });
     const db = await connectToDatabase(context);
     await ensureIndexes(db);
     await requireUser(db, userId);

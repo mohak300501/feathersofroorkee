@@ -9,6 +9,7 @@ const {
   encryptBinocularPayload,
   validateString,
 } = require('./common');
+const { getAuthenticatedUserId } = require('../firebaseAdmin');
 
 exports.handler = async (event, context) => {
   const options = handleOptions(event);

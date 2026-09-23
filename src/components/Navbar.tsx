@@ -1,7 +1,10 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
-import { Bird, LogIn, UserPlus, User, Settings, LogOut, Menu, X, Sun, Moon, Trophy, ListChecks, Binoculars, ScrollText } from 'lucide-react'
+import {
+  Bird, LogIn, UserPlus, User, Settings, LogOut, Menu, X, Sun, Moon, Trophy,
+  ListChecks, Binoculars, ScrollText, ChevronDown
+} from 'lucide-react'
 import { useState } from 'react'
 
 const Navbar = () => {
@@ -9,13 +12,22 @@ const Navbar = () => {
   const { theme, toggleTheme } = useTheme()
   const location = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isMoreOpen, setIsMoreOpen] = useState(false)
 
   const navItems = [
     { to: '/leaderboard', label: 'Leaderboard', icon: Trophy },
+    { to: '/checklist', label: 'Checklist', icon: ListChecks }
+  ]
+
+  const moreItems = [
     { to: '/binoculars', label: 'Binoculars', icon: Binoculars },
-    { to: '/checklist', label: 'Checklist', icon: ListChecks },
+    { to: '/projects', label: 'Projects', icon: ScrollText },
+    { to: '/events', label: 'Events', icon: ScrollText },
     { to: '/poems', label: 'Poems', icon: ScrollText },
-  ];
+    { to: '/stats', label: 'Stats', icon: ScrollText }
+  ]
+
+  const isMoreActive = moreItems.some(item => location.pathname === item.to)
 
   const handleLogout = async () => {
     try {
@@ -52,6 +64,56 @@ const Navbar = () => {
                 <span>{label}</span>
               </Link>
             ))}
+
+            {/* More Dropdown */}
+            <div className="relative group">
+              <button
+                type="button"
+                className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${isMoreActive
+                  ? 'text-white bg-gradient-to-r from-primary-600 to-primary-500 shadow-md shadow-primary-500/30'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                aria-haspopup="true"
+              >
+                <span>More</span>
+
+                <ChevronDown className="h-4 w-4 transition-transform duration-200 group-hover:rotate-180" />
+              </button>
+
+              {/* Animated Dropdown */}
+              <div
+                className="
+                  absolute left-0 top-full w-48
+                  origin-top-right rounded-xl
+                  bg-white dark:bg-slate-900
+                  border border-slate-200 dark:border-slate-800
+                  shadow-xl
+                  overflow-hidden
+                  opacity-0 translate-y-2
+                  pointer-events-none
+                  transition-all duration-200 ease-out
+                  group-hover:opacity-100
+                  group-hover:translate-y-0
+                  group-hover:pointer-events-auto
+                "
+              >
+                <div className="py-2">
+                  {moreItems.map(({ to, label, icon: Icon }) => (
+                    <Link
+                      key={to}
+                      to={to}
+                      className={`flex items-center space-x-3 px-4 py-3 text-sm font-medium transition-colors ${location.pathname === to
+                        ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                        }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{label}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             {user && isAdmin && (
               <Link
@@ -122,7 +184,7 @@ const Navbar = () => {
               {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5 text-yellow-400" />}
             </button>
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              onClick={() => setIsMobileMenuOpen(prev => !prev)}
               className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white p-2"
             >
               {isMobileMenuOpen ? (
@@ -147,12 +209,64 @@ const Navbar = () => {
                     ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
                     : 'text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={() => {
+                    setIsMobileMenuOpen(false)
+                    setIsMoreOpen(false)
+                  }}
                 >
                   <Icon className="h-5 w-5" />
                   <span>{label}</span>
                 </Link>
               ))}
+
+              {/* Mobile More Menu */}
+              <div className="rounded-lg overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setIsMoreOpen(prev => !prev)}
+                  className={`flex w-full items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors ${isMoreActive
+                      ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`}
+                  aria-expanded={isMoreOpen}
+                >
+                  <span className="flex items-center space-x-2">
+                    <span>More</span>
+                  </span>
+
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform duration-200 ${isMoreOpen ? 'rotate-180' : ''
+                      }`}
+                  />
+                </button>
+
+                <div
+                  className={`overflow-hidden transition-all duration-300 ease-in-out ${isMoreOpen
+                      ? 'max-h-64 opacity-100'
+                      : 'max-h-0 opacity-0'
+                    }`}
+                >
+                  <div className="ml-5 pl-3 border-l border-slate-200 dark:border-slate-700">
+                    {moreItems.map(({ to, label, icon: Icon }) => (
+                      <Link
+                        key={to}
+                        to={to}
+                        onClick={() => {
+                          setIsMobileMenuOpen(false)
+                          setIsMoreOpen(false)
+                        }}
+                        className={`flex items-center space-x-2 px-3 py-2.5 rounded-lg text-sm transition-colors ${location.pathname === to
+                            ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
+                            : 'text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                          }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span>{label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
               {user && isAdmin && (
                 <Link

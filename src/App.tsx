@@ -20,6 +20,9 @@ const LeaderBoard = lazy(() => import('./pages/LeaderBoard'))
 const CheckList = lazy(() => import('./pages/CheckList'))
 const Binoculars = lazy(() => import('./pages/Binoculars'))
 const Poems = lazy(() => import('./pages/Poems'))
+const Projects = lazy(() => import('./pages/Projects'))
+const Events = lazy(() => import('./pages/Events'))
+const Stats = lazy(() => import('./pages/Stats'))
 const Profile = lazy(() => import('./pages/Profile'))
 
 function App() {
@@ -52,6 +55,9 @@ function App() {
             <Route path="/leaderboard" element={<LeaderBoard />} />
             <Route path="/checklist" element={<CheckList />} />
             <Route path="/poems" element={<Poems />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/stats" element={<Stats />} />
             <Route path="/about" element={<About />} />
             <Route path="/author" element={<Author />} />
             <Route path="/guidelines" element={<Guidelines />} />

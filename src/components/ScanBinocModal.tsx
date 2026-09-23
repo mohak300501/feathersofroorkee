@@ -12,13 +12,23 @@ const ScanModal = ({ onClose, onScanned }: Props) => {
   const mountedRef = useRef(true)
   const processingRef = useRef(false)
   const startedRef = useRef(false)
+  // Prevents React 18 Strict Mode's double-invocation from creating two scanners.
+  const initialisedRef = useRef(false)
 
   const [error, setError] = useState('')
 
   useEffect(() => {
     mountedRef.current = true
 
+    // Guard: if already initialised (Strict Mode second run), skip.
+    if (initialisedRef.current) return
+    initialisedRef.current = true
+
     const startScanner = async () => {
+      // Clear any leftover DOM from a racing cleanup before initialising.
+      const container = document.getElementById('binocular-qr-reader')
+      if (container) container.innerHTML = ''
+
       const scanner = new Html5Qrcode('binocular-qr-reader')
       scannerRef.current = scanner
 
