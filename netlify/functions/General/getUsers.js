@@ -40,10 +40,10 @@ exports.handler = async (event, context) => {
       },
       {
         $lookup: {
-          from: 'payments',
+          from: 'walkRegistrations',
           localField: 'uid',
           foreignField: 'userId',
-          as: 'workshops'
+          as: 'walks'
         }
       },
       {
@@ -54,7 +54,7 @@ exports.handler = async (event, context) => {
           username: 1,
           isAdmin: 1,
           photoCount: { $size: '$photos' },
-          workshopCount: { $size: '$workshops' },
+          walkCount: { $size: '$walks' },
           createdAt: 1
         }
       },

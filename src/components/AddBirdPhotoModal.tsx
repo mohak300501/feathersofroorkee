@@ -13,6 +13,8 @@ interface AddBirdPhotoModalProps {
 
 const AddBirdPhotoModal = ({ onClose, onUpload, uploading }: AddBirdPhotoModalProps) => {
   const [file, setFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [compress, setCompress] = useState(false)
   const [sighting, setSighting] = useState<SightingFormData>({
     location: '',
     mapCoords: null,
@@ -20,6 +22,17 @@ const AddBirdPhotoModal = ({ onClose, onUpload, uploading }: AddBirdPhotoModalPr
     dateOfSighting: '',
     timeOfSighting: '',
   })
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0] || null
+    setFile(selected)
+    if (selected) {
+      const url = URL.createObjectURL(selected)
+      setPreviewUrl(url)
+    } else {
+      setPreviewUrl(null)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,6 +42,7 @@ const AddBirdPhotoModal = ({ onClose, onUpload, uploading }: AddBirdPhotoModalPr
     }
     const formData = new FormData()
     formData.append('photo', file)
+    formData.append('compress', compress ? 'true' : 'false')
     formData.append('location', sighting.location)
     formData.append('mapCoords', JSON.stringify(sighting.mapCoords))
     formData.append('info', sighting.info)
@@ -57,9 +71,33 @@ const AddBirdPhotoModal = ({ onClose, onUpload, uploading }: AddBirdPhotoModalPr
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              onChange={handleFileChange}
               className="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 dark:file:bg-primary-900/30 dark:file:text-primary-400 hover:file:bg-primary-100 dark:hover:file:bg-primary-900/50 transition-colors"
               required
+            />
+            {previewUrl && (
+              <div className="mt-3 relative w-32 h-32 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
+                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+              </div>
+            )}
+          </div>
+
+          {/* Compress Toggle */}
+          <div className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700">
+            <div>
+              <label htmlFor="bird-compress-toggle" className="text-sm font-medium text-slate-800 dark:text-slate-200 cursor-pointer">
+                Compress image before upload
+              </label>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Enable if uploading high-resolution or large camera photos to avoid size limit errors.
+              </p>
+            </div>
+            <input
+              id="bird-compress-toggle"
+              type="checkbox"
+              checked={compress}
+              onChange={(e) => setCompress(e.target.checked)}
+              className="w-5 h-5 accent-primary-600 rounded cursor-pointer shrink-0 ml-3"
             />
           </div>
 

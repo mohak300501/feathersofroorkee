@@ -2,8 +2,8 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import {
-  Bird, LogIn, UserPlus, User, Settings, LogOut, Menu, X, Sun, Moon, Trophy,
-  ListChecks, Binoculars, ScrollText, ChevronDown
+  Bird, Fish, Leaf, LogIn, UserPlus, User, Settings, LogOut, Menu, X, Sun, Moon, Trophy,
+  ListChecks, Binoculars, ScrollText, ChevronDown, Footprints
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -15,6 +15,7 @@ const Navbar = () => {
   const [isMoreOpen, setIsMoreOpen] = useState(false)
 
   const navItems = [
+    { to: '/walks', label: 'Walks', icon: Footprints},
     { to: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { to: '/checklist', label: 'Checklist', icon: ListChecks }
   ]
@@ -23,11 +24,24 @@ const Navbar = () => {
     { to: '/binoculars', label: 'Binoculars', icon: Binoculars },
     { to: '/projects', label: 'Projects', icon: ScrollText },
     { to: '/events', label: 'Events', icon: ScrollText },
-    { to: '/poems', label: 'Poems', icon: ScrollText },
+    // { to: '/poems', label: 'Poems', icon: ScrollText },
     { to: '/stats', label: 'Stats', icon: ScrollText }
   ]
 
   const isMoreActive = moreItems.some(item => location.pathname === item.to)
+
+  const lifeCategories = [
+    { to: '/', label: 'Bird', icon: Bird },
+    { to: '/mammal', label: 'Mammal', icon: Binoculars },
+    { to: '/reptile', label: 'Reptile', icon: ListChecks },
+    { to: '/amphibian', label: 'Amphibian', icon: ScrollText },
+    { to: '/aquatic', label: 'Aquatic', icon: Fish },
+    { to: '/insect', label: 'Insect', icon: Trophy },
+    { to: '/butterfly', label: 'Butterfly', icon: Trophy },
+    { to: '/spider', label: 'Spider', icon: Trophy },
+    { to: '/honeybee', label: 'Honeybee', icon: Trophy },
+    { to: '/plant', label: 'Plant', icon: Leaf }
+  ]
 
   const handleLogout = async () => {
     try {
@@ -127,6 +141,11 @@ const Navbar = () => {
                 <span>Admin</span>
               </Link>
             )}
+
+            {/* Life Toggle */}
+            <button>
+              {}
+            </button>
 
             {/* Theme Toggle */}
             <button

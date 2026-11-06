@@ -16,6 +16,8 @@ const SignUp = lazy(() => import('./pages/SignUp'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const BirdDetail = lazy(() => import('./pages/BirdDetail'))
 const AdminPanel = lazy(() => import('./pages/AdminPanel'))
+const Walks = lazy(() => import('./pages/Walks'))
+const WalkDetail = lazy(() => import('./pages/WalkDetail'))
 const LeaderBoard = lazy(() => import('./pages/LeaderBoard'))
 const CheckList = lazy(() => import('./pages/CheckList'))
 const Binoculars = lazy(() => import('./pages/Binoculars'))
@@ -51,6 +53,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/bird/:commonCode" element={<BirdDetail />} />
+            <Route path="/walks" element={<Walks />} />
+            <Route path="/walk/:walkCode" element={<WalkDetail />} />
             <Route path="/binoculars" element={<Binoculars />} />
             <Route path="/leaderboard" element={<LeaderBoard />} />
             <Route path="/checklist" element={<CheckList />} />

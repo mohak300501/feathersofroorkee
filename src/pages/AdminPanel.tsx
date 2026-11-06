@@ -10,7 +10,7 @@ interface UserData {
   username: string
   isAdmin: boolean
   photoCount: number
-  workshopCount: number
+  walkCount: number
 }
 
 interface FamilyData {
@@ -177,7 +177,7 @@ const AdminPanel = () => {
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Username</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email</th>
                   <th className="px-6 py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Photos Submitted</th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Workshops Attended</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Walks Attended</th>
                   <th className="px-6 py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Role</th>
                 </tr>
               </thead>
@@ -190,7 +190,7 @@ const AdminPanel = () => {
                       <span className="bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-full">{u.photoCount}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-slate-600 dark:text-slate-400">
-                      <span className="bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-full">{u.workshopCount}</span>
+                      <span className="bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-full">{u.walkCount}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${u.isAdmin ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-700/60 dark:text-slate-300'}`}>

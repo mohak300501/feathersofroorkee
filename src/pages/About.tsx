@@ -5,7 +5,7 @@ const About = () => (
       <b>Feathers of Roorkee</b> is a community-driven platform dedicated to celebrating the rich avian diversity of Roorkee. Our mission is to foster appreciation for birds through photography, citizen science, and responsible bird-watching.
     </p>
     <p className="text-slate-800 dark:text-slate-200">
-      This project is lead by  <b>Mohak Ketan Patil</b>, along with friends and family who are passionate about birds, nature, and conservation. We believe in ethical birding, sharing knowledge, and protecting our feathered friends for generations to come.
+      This project is lead by  <b>Feathers of Roorkee</b>, a small team of IITR students who are passionate about birds, nature, and conservation. We believe in ethical birding, sharing knowledge, and protecting our feathered friends for generations to come.
     </p>
     <p className="text-slate-800 dark:text-slate-200">
       Whether you are a seasoned birder or just starting out, we invite you to explore, contribute, and join our vibrant community!
@@ -20,9 +20,9 @@ const About = () => (
         <li><b>Bird Directory:</b> A comprehensive database of bird species found in Roorkee, complete with detailed descriptions, IUCN conservation status, and migratory tracking.</li>
         <li><b>Bird Checklists & Leaderboards:</b> Explore hierarchical checklists of bird families and species, and compete on the community Leaderboard.</li>
         <li><b>Photo Submissions:</b> Signed-up users can contribute their own bird photographs to the community database.</li>
-        <li><b>Workshops & Galleries:</b> Discover and register for local birdwatching workshops. Share your experiences and workshop photos in the interactive Workshop Gallery.</li>
+        <li><b>Walks & Galleries:</b> Discover and register for local birdwatching walks. Share your experiences and walk photos in the interactive Walk Gallery.</li>
         <li><b>User Profiles:</b> Manage your account, track your submissions, and view your impact.</li>
-        <li><b>Admin Moderation:</b> Dedicated admin tools for reviewing submissions, managing species data, workshops, and maintaining the platform's quality.</li>
+        <li><b>Admin Moderation:</b> Dedicated admin tools for reviewing submissions, managing species data, walks, and maintaining the platform's quality.</li>
       </ul>
     </div>
 

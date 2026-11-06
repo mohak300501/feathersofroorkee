@@ -18,6 +18,7 @@ import EditBirdSightingModal from '../components/EditBirdSightingModal'
 import AddBirdPhotoModal from '../components/AddBirdPhotoModal'
 import AddBirdSightingModal from '../components/AddBirdSightingModal'
 import { FamilyData } from '../components/AddBirdModal'
+import { compressImage, readFileAsBase64, parseApiResponse, isSizeLimitError } from '../utils/imageCompressor'
 
 const BirdDetail = () => {
   const { commonCode } = useParams<{ commonCode: string }>()
@@ -248,34 +249,52 @@ const BirdDetail = () => {
     setUploading(true)
     try {
       const file = formData.get('photo') as File
+      const shouldCompress = formData.get('compress') === 'true'
       const location = formData.get('location') as string
       const mapCoords = JSON.parse(formData.get('mapCoords') as string) as [number, number]
       const info = formData.get('info') as string
       const datetimeOfSighting = formData.get('datetimeOfSighting') as string
       if (!file || !location || !mapCoords || !datetimeOfSighting) throw new Error('Missing required fields')
 
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve((reader.result as string).split(',')[1])
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-      })
+      let fileData = ''
+      let fileName = file.name
+      let contentType = file.type || 'image/jpeg'
+
+      if (shouldCompress) {
+        const compressed = await compressImage(file, { maxWidth: 2048, maxHeight: 2048, quality: 0.85 })
+        fileData = compressed.fileData
+        fileName = compressed.fileName
+        contentType = compressed.contentType
+      } else {
+        fileData = await readFileAsBase64(file)
+      }
 
       const response = await fetch('/api/Bird/addBirdPhoto', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileData: base64Data, fileName: file.name, contentType: file.type, birdId: bird.id, userId: user.uid, location, mapCoords, info, datetimeOfSighting }),
+        body: JSON.stringify({
+          fileData,
+          fileName,
+          contentType,
+          birdId: bird.id,
+          userId: user.uid,
+          location,
+          mapCoords,
+          info,
+          datetimeOfSighting
+        }),
       })
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to upload photo')
-      }
+      await parseApiResponse(response)
       await fetchBirdData()
       setAddingPhotoModal(false)
       toast.success('Photo uploaded successfully!')
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading photo:', error)
-      toast.error(error.message || 'Failed to upload photo')
+      if (isSizeLimitError(error)) {
+        toast.error('Upload failed: image file is too large. Please toggle "Compress image before upload" on and try again.', { duration: 7000 })
+      } else {
+        toast.error(error instanceof Error ? error.message : 'Failed to upload photo')
+      }
     } finally {
       setUploading(false)
     }

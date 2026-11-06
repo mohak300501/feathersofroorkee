@@ -7,14 +7,20 @@ const path = require('path');
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   };
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
 
   try {
-    const { fileData, fileName, contentType, birdId, userId, location, mapCoords, info = '', datetimeOfSighting } = JSON.parse(event.body || '{}');
+    let requestData;
+    try {
+      requestData = JSON.parse(event.body || '{}');
+    } catch {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON payload' }) };
+    }
+    const { fileData, fileName, contentType, birdId, userId, location, mapCoords, info = '', datetimeOfSighting } = requestData;
     if (!fileData || !fileName || !contentType || !birdId || !userId || !location || !datetimeOfSighting || !Array.isArray(mapCoords) || mapCoords.length !== 2) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing required fields' }) };
     }

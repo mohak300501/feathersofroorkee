@@ -86,13 +86,21 @@ const Footer = () => {
               Terms & Conditions
             </Link>
             <a
+              href="https://instagram.com/feathers_of_roorkee"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-1 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
+              <img src="/instagram.svg" alt="Instragram" className="h-4 w-4 dark:invert" />
+              <ExternalLink className="h-3 w-3" />
+            </a>
+            <a
               href="https://github.com/mohak300501/feathersofroorkee"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-1 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               <img src="/github-color.svg" alt="GitHub" className="h-4 w-4 dark:invert" />
-              <span>GitHub</span>
               <ExternalLink className="h-3 w-3" />
             </a>
             <a
