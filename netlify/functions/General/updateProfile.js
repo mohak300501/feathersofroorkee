@@ -47,9 +47,10 @@ exports.handler = async (event, context) => {
     if (username !== undefined) { setFields.username = username; }
     if (whatsapp !== undefined) { setFields.whatsapp = whatsapp; }
     if (optionalInfo !== undefined) {
-      const { institution, role, profession, department, age, gender, } = optionalInfo || {};
+      const { institution, role, status, profession, department, year, age, gender, } = optionalInfo || {};
       setFields.institution = institution ?? '';
       setFields.role = role ?? '';
+      setFields.status = status ?? '';
       // Profession and Department are mutually exclusive.
       if (role === 'Other') {
         setFields.profession = profession ?? '';
@@ -58,6 +59,7 @@ exports.handler = async (event, context) => {
         setFields.profession = '';
         setFields.department = department ?? '';
       }
+      if (role === 'Student') setFields.year = year ?? '';
       setFields.age = age === '' || age === null || age === undefined ? null : Number(age);
       setFields.gender = gender ?? '';
     }

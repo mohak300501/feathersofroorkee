@@ -11,7 +11,13 @@ const institutions = [
   'Other',
 ]
 
-const roles = ['Student', 'Faculty', 'Staff', 'Other']
+const designations = ['Student', 'Faculty', 'Staff', 'Other']
+const statuses = ['Current', 'Former']
+const years = [
+  'PhD 8th', 'PhD 7th', 'PhD 6th', 'PhD 5th', 'PhD 4th', 'PhD 3rd', 'PhD 2nd', 'PhD 1st',
+  'PG 2nd', 'PG 1st',
+  'UG 5th', 'UG 4th', 'UG 3rd', 'UG 2nd', 'UG 1st',
+  '12th', '11th', '10th', '9th', '8th', '7th', '6th', '5th', '4th', '3rd', '2nd', '1st'];
 const professions = ['Artist', 'Doctor', 'Engineer', 'Business', 'Armed Forces', 'Other']
 const genders = ['Male', 'Female', 'Other']
 
@@ -24,21 +30,25 @@ const Profile = () => {
 
   const [institution, setInstitution] = useState('')
   const [role, setRole] = useState('')
+  const [status, setStatus] = useState('')
   const [profession, setProfession] = useState('')
   const [department, setDepartment] = useState('')
+  const [year, setYear] = useState('')
   const [age, setAge] = useState('')
   const [gender, setGender] = useState('')
 
   useEffect(() => {
-    setUsername(currentUsername || "")
+    setUsername(currentUsername || '')
     setWhatsapp(currentWhatsapp || '')
   }, [currentUsername, currentWhatsapp])
 
   useEffect(() => {
     setInstitution(optionalInfo.institution)
     setRole(optionalInfo.role)
+    setStatus(optionalInfo.status)
     setProfession(optionalInfo.role === 'Other' ? optionalInfo.profession : '')
     setDepartment(optionalInfo.role === 'Other' ? '' : optionalInfo.department)
+    setYear(optionalInfo.role === 'Student' ? optionalInfo.year : '')
     setAge(optionalInfo.age)
     setGender(optionalInfo.gender)
   }, [optionalInfo])
@@ -56,8 +66,10 @@ const Profile = () => {
       await updateProfile(username, whatsapp, {
         institution,
         role,
+        status,
         profession: role === 'Other' ? profession : '',
         department: role === 'Other' ? '' : department,
+        year: role === 'Student' ? year : '',
         age,
         gender
       })
@@ -178,7 +190,7 @@ const Profile = () => {
 
           <div>
             <label htmlFor="role" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Role
+              Designation
             </label>
             <select
               id="role"
@@ -186,14 +198,31 @@ const Profile = () => {
               onChange={(e) => handleRoleChange(e.target.value)}
               className="input-field"
             >
-              <option value="">Select role</option>
-              {roles.map((option) => (
+              <option value="">Select designation</option>
+              {designations.map((option) => (
                 <option key={option} value={option}>{option}</option>
               ))}
             </select>
           </div>
 
-          {role === 'Other' && (
+          <div>
+            <label htmlFor="status" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Status
+            </label>
+            <select
+              id="status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="input-field"
+            >
+              <option value="">Select designation status</option>
+              {statuses.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
+
+          {role === 'Other' ? (
             <div>
               <label htmlFor="profession" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Profession
@@ -210,9 +239,7 @@ const Profile = () => {
                 ))}
               </select>
             </div>
-          )}
-
-          {role !== 'Other' && (
+          ) : (
             <div>
               <label htmlFor="department" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Department
@@ -230,6 +257,25 @@ const Profile = () => {
               </select>
             </div>
           )}
+
+          {role === 'Student' && status === 'Current' &&
+            <div>
+              <label htmlFor="year" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Year
+              </label>
+              <select
+                id="year"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                className="input-field"
+              >
+                <option value="">Select year of study</option>
+                {years.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+          }
 
           <div>
             <label htmlFor="age" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">

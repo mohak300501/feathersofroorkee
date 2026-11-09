@@ -14,8 +14,10 @@ import toast from 'react-hot-toast'
 interface OptionalInfo {
   institution: string
   role: string
+  status: string
   profession: string
   department: string
+  year: string
   age: string
   gender: string
 }
@@ -53,8 +55,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [optionalInfo, setOptionalInfo] = useState<OptionalInfo>({
     institution: '',
     role: '',
+    status: '',
     profession: '',
     department: '',
+    year: '',
     age: '',
     gender: ''
   })
@@ -79,8 +83,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setOptionalInfo({
           institution: data.user.institution || '',
           role: data.user.role || '',
+          status: data.user.status || '',
           profession: data.user.profession || '',
           department: data.user.department || '',
+          year: data.user.year || '',
           age: data.user.age != null ? String(data.user.age) : '',
           gender: data.user.gender || ''
         });
@@ -89,14 +95,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUsername(null);
         setWhatsapp(null);
         setIsAdmin(false);
-        setOptionalInfo({ institution: '', role: '', profession: '', department: '', age: '', gender: '' });
+        setOptionalInfo({ institution: '', role: '', status: '', profession: '', department: '', year: '', age: '', gender: '' });
       }
     } catch (error) {
       console.error('Error syncing user data:', error)
       setUsername(null);
       setWhatsapp(null);
       setIsAdmin(false);
-      setOptionalInfo({ institution: '', role: '', profession: '', department: '', age: '', gender: '' });
+      setOptionalInfo({ institution: '', role: '', status: '', profession: '', department: '', year: '', age: '', gender: '' });
     }
   };
 
