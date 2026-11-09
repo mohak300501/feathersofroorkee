@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { DEPT_MAP } from '../utils/dept_map'
-import { User, Mail, Save } from 'lucide-react'
+import { User, Mail, Phone, Save } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const institutions = [
@@ -16,9 +16,10 @@ const professions = ['Artist', 'Doctor', 'Engineer', 'Business', 'Armed Forces',
 const genders = ['Male', 'Female', 'Other']
 
 const Profile = () => {
-  const { user, username: currentUsername, optionalInfo, updateProfile } = useAuth()
+  const { user, username: currentUsername, whatsapp: currentWhatsapp, optionalInfo, updateProfile } = useAuth()
 
-  const [username, setUsername] = useState(currentUsername || "")
+  const [username, setUsername] = useState('')
+  const [whatsapp, setWhatsapp] = useState('')
   const [loading, setLoading] = useState(false)
 
   const [institution, setInstitution] = useState('')
@@ -30,7 +31,8 @@ const Profile = () => {
 
   useEffect(() => {
     setUsername(currentUsername || "")
-  }, [currentUsername])
+    setWhatsapp(currentWhatsapp || '')
+  }, [currentUsername, currentWhatsapp])
 
   useEffect(() => {
     setInstitution(optionalInfo.institution)
@@ -51,7 +53,7 @@ const Profile = () => {
 
     setLoading(true)
     try {
-      await updateProfile(username, {
+      await updateProfile(username, whatsapp, {
         institution,
         role,
         profession: role === 'Other' ? profession : '',
@@ -128,6 +130,25 @@ const Profile = () => {
               />
             </div>
           </div>
+
+          <div>
+            <label htmlFor="whatsapp" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              WhatsApp Contact
+            </label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
+              <input
+                id="whatsapp"
+                type="text"
+                value={whatsapp || ""}
+                onChange={(e) => setWhatsapp(e.target.value)}
+                className="input-field pl-10"
+                placeholder="Enter a 10-digit number"
+              />
+            </div>
+            <p className="mt-1 text-xs text-slate-500">Required for BirdWalk registration.</p>
+          </div>
+
         </div>
 
         <div className="glass rounded-2xl p-8 shadow-xl animate-fade-in">

@@ -54,6 +54,7 @@ exports.handler = async (event, context) => {
           uid: userDoc.uid,
           email: userDoc.email,
           username: userDoc.username,
+          whatsapp: userDoc.whatsapp || '',
           isAdmin: userDoc.isAdmin,
           institution: userDoc.institution || '',
           role: userDoc.role || '',

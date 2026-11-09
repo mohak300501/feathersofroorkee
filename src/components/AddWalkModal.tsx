@@ -162,7 +162,7 @@ const AddWalkModal = ({ onClose, onSuccess }: AddWalkModalProps) => {
                   Compress poster image before upload
                 </label>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Enable if uploading high-resolution posters to avoid size limit errors.
+                  Enable if you get a size limit error.
                 </p>
               </div>
               <input

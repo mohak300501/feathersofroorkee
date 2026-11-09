@@ -4,6 +4,8 @@ const getWalk = require('./getWalk');
 const editWalk = require('./editWalk');
 const deleteWalk = require('./deleteWalk');
 const registerWalk = require('./registerWalk');
+const cancelWalkRegistration = require('./cancelWalkRegistration');
+const getWalkRegistrations = require('./getWalkRegistrations');
 const addWalkPhoto = require('./addWalkPhoto');
 
 exports.handler = async (event, context) => {
@@ -16,6 +18,8 @@ exports.handler = async (event, context) => {
     case 'editWalk': return editWalk.handler(event, context);
     case 'deleteWalk': return deleteWalk.handler(event, context);
     case 'registerWalk': return registerWalk.handler(event, context);
+    case 'cancelWalkRegistration': return cancelWalkRegistration.handler(event, context);
+    case 'getWalkRegistrations': return getWalkRegistrations.handler(event, context);
     case 'addWalkPhoto': return addWalkPhoto.handler(event, context);
     default:
       return { statusCode: 404, body: JSON.stringify({ error: 'Function action not found in Walk' }) };

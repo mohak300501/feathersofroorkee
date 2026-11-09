@@ -5,7 +5,7 @@ import Footer from './components/Footer'
 import LoadingSpinner from './components/LoadingSpinner'
 import { lazy, Suspense, useEffect } from 'react'
 import About from './pages/About'
-import Author from './pages/Author'
+import Author from './pages/Team'
 import Guidelines from './pages/Guidelines'
 import Terms from './pages/Terms'
 

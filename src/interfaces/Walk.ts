@@ -6,7 +6,7 @@ export interface Walk {
   datetime: string
   location: string
   mapPin?: string
-  participantCount: number
+  bookedSlots: number
   limit?: number
   featuredPhoto?: string
   addedBy?: string
@@ -33,4 +33,3 @@ export interface WalkRegistrationData {
   walkId: string
   members: number
 }
-

@@ -18,10 +18,56 @@ exports.handler = async (event, context) => {
   try {
     const db = await connectToDatabase(context);
 
-    // Fetch all walks, sorted by newest first
+    // Include only supported walk fields so stale stored fields are not exposed.
     const walks = await db.collection('walks')
-      .find({})
-      .sort({ datetime: -1 })
+      .aggregate([
+        {
+          $lookup: {
+            from: 'walkRegistrations',
+            let: {
+              walkId: { $toString: '$_id' },
+              walkCode: '$walkCode'
+            },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $in: ['$walkId', ['$$walkId', '$$walkCode']]
+                  }
+                }
+              },
+              {
+                $group: {
+                  _id: null,
+                  bookedSlots: {
+                    $sum: { $ifNull: ['$slots', { $ifNull: ['$members', 1] }] }
+                  }
+                }
+              }
+            ],
+            as: 'registrationSummary'
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            walkCode: 1,
+            title: 1,
+            info: 1,
+            datetime: 1,
+            location: 1,
+            mapPin: 1,
+            limit: 1,
+            featuredPhoto: 1,
+            addedBy: 1,
+            addedAt: 1,
+            bookedSlots: {
+              $ifNull: [{ $arrayElemAt: ['$registrationSummary.bookedSlots', 0] }, 0]
+            }
+          }
+        },
+        { $sort: { datetime: -1 } }
+      ])
       .toArray();
 
     return {

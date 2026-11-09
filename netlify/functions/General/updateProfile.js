@@ -15,7 +15,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { uid, username, optionalInfo } = JSON.parse(event.body);
+    const { uid, username, whatsapp, optionalInfo } = JSON.parse(event.body);
 
     if (!uid) {
       return {
@@ -45,6 +45,7 @@ exports.handler = async (event, context) => {
 
     const setFields = {};
     if (username !== undefined) { setFields.username = username; }
+    if (whatsapp !== undefined) { setFields.whatsapp = whatsapp; }
     if (optionalInfo !== undefined) {
       const { institution, role, profession, department, age, gender, } = optionalInfo || {};
       setFields.institution = institution ?? '';

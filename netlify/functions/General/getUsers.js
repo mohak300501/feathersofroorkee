@@ -52,6 +52,7 @@ exports.handler = async (event, context) => {
           uid: 1,
           email: 1,
           username: 1,
+          whatsapp: 1,
           isAdmin: 1,
           photoCount: { $size: '$photos' },
           walkCount: { $size: '$walks' },

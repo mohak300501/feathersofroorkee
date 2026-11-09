@@ -74,7 +74,6 @@ exports.handler = async (event, context) => {
       datetime: d,
       location,
       mapPin: mapPin || '',
-      participantCount: 0,
       limit: participantLimit,
       featuredPhoto: imagekitFilePath,
       addedBy: userId,

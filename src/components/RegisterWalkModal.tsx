@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Users, CheckCircle } from 'lucide-react'
+import { X, Users } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { parseApiResponse } from '../utils/imageCompressor'
 
@@ -13,15 +13,15 @@ interface RegisterWalkModalProps {
 
 const RegisterWalkModal = ({ walkId, walkTitle, availableSlots, onClose, onSuccess }: RegisterWalkModalProps) => {
   const { user } = useAuth()
-  const [members, setMembers] = useState(1)
+  const [slots, setSlots] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const maxSelectable = Math.min(5, Math.max(1, availableSlots))
+  const maxSelectable = Math.min(3, Math.max(1, availableSlots))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (members < 1 || members > availableSlots) {
+    if (slots < 1 || slots > availableSlots) {
       setError(`Please select between 1 and ${availableSlots} slots.`)
       return
     }
@@ -32,13 +32,18 @@ const RegisterWalkModal = ({ walkId, walkTitle, availableSlots, onClose, onSucce
     try {
       const payload = {
         walkId,
-        members,
+        slots,
         userId: user?.uid
       }
+      const token = await user?.getIdToken()
+      if (!token) throw new Error('Please login to register for walks')
 
       const response = await fetch('/api/Walk/registerWalk', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
         body: JSON.stringify(payload)
       })
 
@@ -46,7 +51,7 @@ const RegisterWalkModal = ({ walkId, walkTitle, availableSlots, onClose, onSucce
       if (data && data.success) {
         onSuccess()
       } else {
-        setError(data?.error || 'Failed to complete registration')
+        setError(data?.error ? String(data.error) : 'Failed to complete registration')
       }
     } catch (err: unknown) {
       console.error(err)
@@ -80,7 +85,7 @@ const RegisterWalkModal = ({ walkId, walkTitle, availableSlots, onClose, onSucce
           )}
 
           <div className="mb-6 p-4 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 rounded-xl text-sm leading-relaxed border border-primary-100 dark:border-primary-900/30">
-            Participation in Feathers of Roorkee birdwatching walks is completely free! Select how many spots you would like to reserve below.
+            Select how many spots you would like to reserve below.
           </div>
 
           <form id="register-walk-form" onSubmit={handleSubmit} className="space-y-6">
@@ -89,8 +94,8 @@ const RegisterWalkModal = ({ walkId, walkTitle, availableSlots, onClose, onSucce
                 <Users className="w-4 h-4 text-primary-500" /> Number of Participants
               </label>
               <select
-                value={members}
-                onChange={(e) => setMembers(Number(e.target.value))}
+                value={slots}
+                onChange={(e) => setSlots(Number(e.target.value))}
                 className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary-500 text-slate-800 dark:text-white transition-all text-base"
               >
                 {Array.from({ length: maxSelectable }, (_, i) => i + 1).map((num) => (
@@ -128,7 +133,6 @@ const RegisterWalkModal = ({ walkId, walkTitle, availableSlots, onClose, onSucce
               </>
             ) : (
               <>
-                <CheckCircle className="w-5 h-5" />
                 Confirm Registration
               </>
             )}

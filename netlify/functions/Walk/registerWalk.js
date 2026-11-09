@@ -1,5 +1,7 @@
 const { connectToDatabase } = require('../General/db');
 const { ObjectId } = require('mongodb');
+const { getAuthenticatedUserId } = require('../firebaseAdmin');
+const { getBookedSlots } = require('./common');
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -23,9 +25,9 @@ exports.handler = async (event, context) => {
     } catch {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON payload' }) };
     }
-    const { walkId, members, userId } = requestData;
+    const { walkId, slots, userId } = requestData;
 
-    if (!walkId || !members || !userId) {
+    if (!walkId || !slots || !userId) {
       return {
         statusCode: 400,
         headers,
@@ -33,12 +35,17 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const membersCount = parseInt(members, 10);
-    if (isNaN(membersCount) || membersCount < 1) {
+    const authenticatedUserId = await getAuthenticatedUserId(event);
+    if (!authenticatedUserId || authenticatedUserId !== userId) {
+      return { statusCode: 401, headers, body: JSON.stringify({ error: 'Authentication required' }) };
+    }
+
+    const slotsCount = Number(slots);
+    if (!Number.isInteger(slotsCount) || slotsCount < 1) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'Invalid number of members' }),
+        body: JSON.stringify({ error: 'Invalid number of slots' }),
       };
     }
 
@@ -63,9 +70,30 @@ exports.handler = async (event, context) => {
       return { statusCode: 404, headers, body: JSON.stringify({ error: 'Walk not found' }) };
     }
 
+    const registrations = db.collection('walkRegistrations');
+    await registrations.createIndex({ walkId: 1, userId: 1 }, { unique: true });
+
+    const canonicalWalkId = walk._id.toString();
+
+    const walkIdValues = [walk._id, canonicalWalkId, walk.walkCode];
+
+    // Check all supported walkId formats before inserting.
+    const existingRegistration = await registrations.findOne({
+      walkId: { $in: walkIdValues },
+      userId
+    });
+
+    if (existingRegistration) {
+      return {
+        statusCode: 409,
+        headers,
+        body: JSON.stringify({ error: 'You are already registered for this walk' }),
+      };
+    }
+
     const maxCapacity = walk.limit && walk.limit > 0 ? walk.limit : 25;
-    const currentCount = walk.participantCount || 0;
-    if (currentCount + membersCount > maxCapacity) {
+    const currentCount = await getBookedSlots(db, walk);
+    if (currentCount + slotsCount > maxCapacity) {
       return {
         statusCode: 400,
         headers,
@@ -75,28 +103,48 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const updateResult = await db.collection('walks').updateOne(
-      { _id: walk._id, participantCount: { $lte: maxCapacity - membersCount } },
-      { $inc: { participantCount: membersCount } }
-    );
-
-    if (updateResult.modifiedCount === 0) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Failed to reserve slots. Walk might be full.' }) };
+    let registration;
+    try {
+      registration = await registrations.insertOne({
+        walkId: canonicalWalkId,
+        userId,
+        slots: slotsCount,
+        registeredAt: new Date()
+      });
+    } catch (error) {
+      if (error.code === 11000) {
+        return {
+          statusCode: 409,
+          headers,
+          body: JSON.stringify({ error: 'You are already registered for this walk' }),
+        };
+      }
+      throw error;
     }
 
-    await db.collection('walkRegistrations').insertOne({
-      walkId: walk._id.toString(),
-      walkCode: walk.walkCode,
-      userId,
-      username: user.username,
-      members: membersCount,
-      registeredAt: new Date()
-    });
+    let updatedBookedSlots;
+    try {
+      updatedBookedSlots = await getBookedSlots(db, walk);
+    } catch (error) {
+      await registrations.deleteOne({ _id: registration.insertedId });
+      throw error;
+    }
+
+    if (updatedBookedSlots > maxCapacity) {
+      await registrations.deleteOne({ _id: registration.insertedId });
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          error: `Not enough available slots in this walk (Available: ${Math.max(0, maxCapacity - currentCount)})`
+        })
+      };
+    }
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ success: true, updatedParticipantCount: currentCount + membersCount }),
+      body: JSON.stringify({ success: true, bookedSlots: updatedBookedSlots }),
     };
   } catch (error) {
     console.error('Error registering for walk:', error);

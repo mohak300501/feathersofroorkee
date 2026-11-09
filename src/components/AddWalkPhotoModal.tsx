@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { X, Upload, MessageSquare, Image as ImageIcon } from 'lucide-react'
+import { X, Upload, Camera, MessageSquare, Image as ImageIcon } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { compressImage, readFileAsBase64, parseApiResponse, isSizeLimitError } from '../utils/imageCompressor'
 import toast from 'react-hot-toast'
@@ -111,7 +111,9 @@ const AddWalkPhotoModal = ({ walkId, onClose, onSuccess }: AddWalkPhotoModalProp
 
           <form id="add-walkPhotos-form" onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Your Photo</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                <Camera className="w-4 h-4" /> Add a photo
+              </label>
               <div
                 className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${previewUrl ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/10' : 'border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                 onClick={() => fileInputRef.current?.click()}
@@ -147,7 +149,7 @@ const AddWalkPhotoModal = ({ walkId, onClose, onSuccess }: AddWalkPhotoModalProp
                   Compress image before upload
                 </label>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Enable if uploading high-resolution photos to avoid size limit errors.
+                  Enable if you get a size limit error.
                 </p>
               </div>
               <input

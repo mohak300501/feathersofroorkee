@@ -25,12 +25,13 @@ interface AuthContextType {
   loading: boolean
   isAdmin: boolean
   username: string | null
+  whatsapp: string | null
   optionalInfo: OptionalInfo
   login: (email: string, password: string) => Promise<void>
   signup: (username: string, email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
-  updateProfile: (newUsername: string, newOptionalInfo?: OptionalInfo) => Promise<void>
+  updateProfile: (newUsername: string, newWhatsapp: string, newOptionalInfo?: OptionalInfo) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -48,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [username, setUsername] = useState<string | null>(null)
+  const [whatsapp, setWhatsapp] = useState<string | null>(null)
   const [optionalInfo, setOptionalInfo] = useState<OptionalInfo>({
     institution: '',
     role: '',
@@ -65,13 +67,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
-          username: customUsername || firebaseUser.email?.split('@')[0],
+          username: customUsername || firebaseUser.email?.split('@')[0]
         })
       });
 
       const data = await response.json();
       if (data.success && data.user) {
         setUsername(data.user.username);
+        setWhatsapp(data.user.whatsapp);
         setIsAdmin(!!data.user.isAdmin);
         setOptionalInfo({
           institution: data.user.institution || '',
@@ -84,12 +87,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         console.error('Failed to sync user:', data.error, data.details || '')
         setUsername(null);
+        setWhatsapp(null);
         setIsAdmin(false);
         setOptionalInfo({ institution: '', role: '', profession: '', department: '', age: '', gender: '' });
       }
     } catch (error) {
       console.error('Error syncing user data:', error)
       setUsername(null);
+      setWhatsapp(null);
       setIsAdmin(false);
       setOptionalInfo({ institution: '', role: '', profession: '', department: '', age: '', gender: '' });
     }
@@ -167,7 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
-  const updateProfile = async (newUsername: string, newOptionalInfo?: OptionalInfo) => {
+  const updateProfile = async (newUsername: string, newWhatsapp?: string, newOptionalInfo?: OptionalInfo) => {
     if (!user) throw new Error('Not authenticated')
 
     try {
@@ -177,6 +182,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({
           uid: user.uid,
           username: newUsername,
+          ...(newWhatsapp? {whatsapp: newWhatsapp} : {}),
           ...(newOptionalInfo ? { optionalInfo: newOptionalInfo } : {})
         })
       });
@@ -187,9 +193,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setUsername(newUsername);
-      if (newOptionalInfo) {
-        setOptionalInfo(newOptionalInfo);
-      }
+      if (newWhatsapp) setWhatsapp(newWhatsapp);
+      if (newOptionalInfo) setOptionalInfo(newOptionalInfo);
       toast.success('Profile updated successfully!');
     } catch (error: any) {
       console.error('Profile update error:', error);
@@ -203,6 +208,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     isAdmin,
     username,
+    whatsapp,
     optionalInfo,
     login,
     signup,

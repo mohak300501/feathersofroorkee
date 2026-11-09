@@ -1,5 +1,6 @@
 const { connectToDatabase } = require('../General/db');
 const { ObjectId } = require('mongodb');
+const { getBookedSlots } = require('./common');
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -43,6 +44,7 @@ exports.handler = async (event, context) => {
         body: JSON.stringify({ error: 'Walk not found' }),
       };
     }
+    const bookedSlots = await getBookedSlots(db, walk);
 
     // Fetch walkPhotos photos for this walk and lookup username
     const walkPhotos = await db.collection('walkPhotos')
@@ -80,7 +82,21 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ ...walk, walkPhotos }),
+      body: JSON.stringify({
+        _id: walk._id,
+        walkCode: walk.walkCode,
+        title: walk.title,
+        info: walk.info,
+        datetime: walk.datetime,
+        location: walk.location,
+        mapPin: walk.mapPin,
+        bookedSlots,
+        limit: walk.limit,
+        featuredPhoto: walk.featuredPhoto,
+        addedBy: walk.addedBy,
+        addedAt: walk.addedAt,
+        walkPhotos
+      }),
     };
   } catch (error) {
     console.error('Error fetching walk:', error);

@@ -7,17 +7,17 @@ export interface WalkCardProps {
   info: string
   datetime: string
   location: string
-  participantCount: number
+  bookedSlots: number
   limit?: number
   featuredPhoto?: string
 }
 
-const WalkCard = ({ walkCode, title, info, datetime, location, participantCount, limit, featuredPhoto }: WalkCardProps) => {
+const WalkCard = ({ walkCode, title, info, datetime, location, bookedSlots, limit, featuredPhoto }: WalkCardProps) => {
   const dateObj = new Date(datetime)
   const isValidDate = !isNaN(dateObj.getTime())
   const isPast = isValidDate && dateObj < new Date()
   const maxCapacity = limit && limit > 0 ? limit : 25
-  const isFull = participantCount >= maxCapacity
+  const isFull = bookedSlots >= maxCapacity
 
   const imageUrl = featuredPhoto
     ? (featuredPhoto.startsWith('http')
@@ -98,7 +98,7 @@ const WalkCard = ({ walkCode, title, info, datetime, location, participantCount,
             <div className="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-800 mt-3">
               <div className="flex items-center space-x-1.5 text-sm text-slate-500">
                 <Users className="h-4 w-4" />
-                <span>{participantCount} / {maxCapacity} Participants</span>
+                <span>{bookedSlots} / {maxCapacity} Participants</span>
               </div>
             </div>
           </div>

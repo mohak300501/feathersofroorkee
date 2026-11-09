@@ -1,6 +1,6 @@
 const Author = () => (
     <div className="max-w-2xl mx-auto py-12 px-4 space-y-6">
-        <h1 className="section-header text-center mb-6">Author</h1>
+        <h1 className="section-header text-center mb-6">Team</h1>
 
         <center><img src="/assets/author.jpg" alt="Mohak Ketan Patil" className="rounded-2xl shadow-lg max-w-sm w-full" /></center>
 
