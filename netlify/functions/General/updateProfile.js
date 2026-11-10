@@ -47,19 +47,19 @@ exports.handler = async (event, context) => {
     if (username !== undefined) { setFields.username = username; }
     if (whatsapp !== undefined) { setFields.whatsapp = whatsapp; }
     if (optionalInfo !== undefined) {
-      const { institution, role, status, profession, department, year, age, gender, } = optionalInfo || {};
+      const { institution, designation, status, profession, department, year, age, gender, } = optionalInfo || {};
       setFields.institution = institution ?? '';
-      setFields.role = role ?? '';
+      setFields.designation = designation ?? '';
       setFields.status = status ?? '';
       // Profession and Department are mutually exclusive.
-      if (role === 'Other') {
+      if (designation === 'Other') {
         setFields.profession = profession ?? '';
         setFields.department = '';
       } else {
         setFields.profession = '';
         setFields.department = department ?? '';
       }
-      if (role === 'Student') setFields.year = year ?? '';
+      if (designation === 'Student') setFields.year = year ?? '';
       setFields.age = age === '' || age === null || age === undefined ? null : Number(age);
       setFields.gender = gender ?? '';
     }

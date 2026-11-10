@@ -20,7 +20,7 @@ exports.handler = async (event, context) => {
     const sightingObjectId = new ObjectId(sightingId);
     const sighting = await db.collection('birdSightings').findOne({ _id: sightingObjectId });
     if (!sighting) return { statusCode: 404, headers, body: JSON.stringify({ error: 'Sighting not found' }) };
-    if (sighting.userId !== userId && userDoc.isAdmin !== true) {
+    if (sighting.userId !== userId && userDoc.userType !== 0) {
       return { statusCode: 403, headers, body: JSON.stringify({ error: 'Not authorized to delete this sighting' }) };
     }
     await db.collection('birdSightings').deleteOne({ _id: sightingObjectId });

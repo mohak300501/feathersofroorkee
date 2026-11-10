@@ -49,7 +49,7 @@ exports.handler = async (event, context) => {
     const db = await connectToDatabase(context);
 
     const user = await db.collection('users').findOne({ uid: userId });
-    if (!user || !user.isAdmin) {
+    if (!user || user.userType !== 0) {
       return {
         statusCode: 403,
         headers,

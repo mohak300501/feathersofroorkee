@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { DEPT_MAP } from '../utils/dept_map'
-import { User, Mail, Phone, Save } from 'lucide-react'
+import { User, Mail, Phone, Save, Camera } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { compressImage } from '../utils/imageCompressor'
 
 const institutions = [
   'IITR Indian Institute of Technology Roorkee',
@@ -22,14 +23,16 @@ const professions = ['Artist', 'Doctor', 'Engineer', 'Business', 'Armed Forces',
 const genders = ['Male', 'Female', 'Other']
 
 const Profile = () => {
-  const { user, username: currentUsername, whatsapp: currentWhatsapp, optionalInfo, updateProfile } = useAuth()
+  const { user, username: currentUsername, userPhoto: currentUserPhoto, whatsapp: currentWhatsapp, optionalInfo, updateProfile, updateUserPhoto } = useAuth()
 
   const [username, setUsername] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
   const [loading, setLoading] = useState(false)
+  const [userPhoto, setUserPhoto] = useState<string | null>(currentUserPhoto)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
   const [institution, setInstitution] = useState('')
-  const [role, setRole] = useState('')
+  const [designation, setRole] = useState('')
   const [status, setStatus] = useState('')
   const [profession, setProfession] = useState('')
   const [department, setDepartment] = useState('')
@@ -43,12 +46,16 @@ const Profile = () => {
   }, [currentUsername, currentWhatsapp])
 
   useEffect(() => {
+    setUserPhoto(currentUserPhoto)
+  }, [currentUserPhoto])
+
+  useEffect(() => {
     setInstitution(optionalInfo.institution)
-    setRole(optionalInfo.role)
+    setRole(optionalInfo.designation)
     setStatus(optionalInfo.status)
-    setProfession(optionalInfo.role === 'Other' ? optionalInfo.profession : '')
-    setDepartment(optionalInfo.role === 'Other' ? '' : optionalInfo.department)
-    setYear(optionalInfo.role === 'Student' ? optionalInfo.year : '')
+    setProfession(optionalInfo.designation === 'Other' ? optionalInfo.profession : '')
+    setDepartment(optionalInfo.designation === 'Other' ? '' : optionalInfo.department)
+    setYear(optionalInfo.designation === 'Student' ? optionalInfo.year : '')
     setAge(optionalInfo.age)
     setGender(optionalInfo.gender)
   }, [optionalInfo])
@@ -65,11 +72,11 @@ const Profile = () => {
     try {
       await updateProfile(username, whatsapp, {
         institution,
-        role,
+        designation,
         status,
-        profession: role === 'Other' ? profession : '',
-        department: role === 'Other' ? '' : department,
-        year: role === 'Student' ? year : '',
+        profession: designation === 'Other' ? profession : '',
+        department: designation === 'Other' ? '' : department,
+        year: designation === 'Student' ? year : '',
         age,
         gender
       })
@@ -92,16 +99,82 @@ const Profile = () => {
     setAge(value.replace(/\D/g, ''))
   }
 
+  const handlePhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file || !user) return
+    event.target.value = ''
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast.error('Please select a JPEG, PNG, or WebP image')
+      return
+    }
+
+    setUploadingPhoto(true)
+    try {
+      const image = await compressImage(file, { maxWidth: 1200, maxHeight: 1200, maxSizeMB: 3.5 })
+      const token = await user.getIdToken()
+      const response = await fetch('/api/General/uploadUserPhoto', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(image)
+      })
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to upload profile photo')
+      }
+      setUserPhoto(data.userPhoto)
+      updateUserPhoto(data.userPhoto)
+      toast.success('Profile photo updated')
+    } catch (error: unknown) {
+      console.error('Error uploading profile photo:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to upload profile photo')
+    } finally {
+      setUploadingPhoto(false)
+    }
+  }
+
   if (!user) return null;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-12 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="max-w-7xl mx-auto space-y-12 py-12 px-4 sm:px-6 lg:px-8">
       <div className="text-center">
         <h1 className="section-header">Your Profile</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="glass rounded-2xl p-8 shadow-xl animate-fade-in">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] gap-6 items-start">
+        <aside className="glass rounded-2xl p-6 shadow-xl text-center md:sticky md:top-24 md:self-start">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-5">Profile Photo</h2>
+          <div className="w-40 h-40 mx-auto rounded-full overflow-hidden bg-slate-100 dark:bg-slate-700 border-4 border-white dark:border-slate-600 shadow-lg">
+            {userPhoto ? (
+              <img
+                src={userPhoto.startsWith('http') ? userPhoto : `${import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT}${userPhoto}`}
+                alt="Your profile"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-400">
+                <User className="w-16 h-16" />
+              </div>
+            )}
+          </div>
+          <label className={`btn-primary mt-6 inline-flex items-center gap-2 cursor-pointer ${uploadingPhoto ? 'opacity-60 pointer-events-none' : ''}`}>
+            <Camera className="h-5 w-5" />
+            <span>{uploadingPhoto ? 'Uploading...' : userPhoto ? 'Change Photo' : 'Upload Photo'}</span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+              disabled={uploadingPhoto}
+              className="sr-only"
+            />
+          </label>
+        </aside>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+        <div id="account-details" className="glass rounded-2xl p-8 shadow-xl animate-fade-in scroll-mt-24">
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Account Details</h2>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
@@ -163,7 +236,7 @@ const Profile = () => {
 
         </div>
 
-        <div className="glass rounded-2xl p-8 shadow-xl animate-fade-in">
+        <div id="optional-info" className="glass rounded-2xl p-8 shadow-xl animate-fade-in scroll-mt-24">
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Optional Info</h2>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
@@ -189,12 +262,12 @@ const Profile = () => {
           </div>
 
           <div>
-            <label htmlFor="role" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <label htmlFor="designation" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Designation
             </label>
             <select
-              id="role"
-              value={role}
+              id="designation"
+              value={designation}
               onChange={(e) => handleRoleChange(e.target.value)}
               className="input-field"
             >
@@ -222,7 +295,7 @@ const Profile = () => {
             </select>
           </div>
 
-          {role === 'Other' ? (
+          {designation === 'Other' ? (
             <div>
               <label htmlFor="profession" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Profession
@@ -258,7 +331,7 @@ const Profile = () => {
             </div>
           )}
 
-          {role === 'Student' && status === 'Current' &&
+          {designation === 'Student' && status === 'Current' &&
             <div>
               <label htmlFor="year" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Year
@@ -332,6 +405,18 @@ const Profile = () => {
           </button>
         </div>
       </form>
+        <aside className="glass rounded-2xl p-6 shadow-xl md:sticky md:top-24 md:self-start">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Sections</h2>
+          <nav aria-label="Profile sections" className="space-y-2">
+            <a href="#account-details" className="block rounded-lg px-4 py-3 text-slate-700 dark:text-slate-200 hover:bg-primary-50 dark:hover:bg-slate-700 transition-colors">
+              Account Details
+            </a>
+            <a href="#optional-info" className="block rounded-lg px-4 py-3 text-slate-700 dark:text-slate-200 hover:bg-primary-50 dark:hover:bg-slate-700 transition-colors">
+              Optional Info
+            </a>
+          </nav>
+        </aside>
+      </div>
     </div>
   )
 }

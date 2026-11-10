@@ -31,7 +31,7 @@ exports.handler = async (event, context) => {
 
     // Check if user exists and get permissions
     const userDoc = await db.collection('users').findOne({ uid: userId });
-    if (!userDoc || !userDoc.isAdmin) {
+    if (!userDoc || userDoc.userType !== 0) {
       return {
         statusCode: 403,
         headers,

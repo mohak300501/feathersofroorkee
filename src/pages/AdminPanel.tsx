@@ -3,13 +3,14 @@ import { useAuth } from '../contexts/AuthContext'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { Plus, Trash2, Settings, Edit2, X, FolderTree, Users } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { userTypes, type UserType } from '../utils/userTypes'
 
 interface UserData {
   uid: string
   email: string
   username: string
   whatsapp: string
-  isAdmin: boolean
+  userType: UserType
   photoCount: number
   walkCount: number
 }
@@ -43,14 +44,21 @@ const AdminPanel = () => {
 
   const fetchData = async () => {
     try {
+      const token = await user?.getIdToken()
+      if (!token) throw new Error('Authentication required')
       const [usersRes, familiesRes] = await Promise.all([
-        fetch(`/api/General/getUsers?userId=${user?.uid}`),
+        fetch('/api/General/getUsers', { headers: { Authorization: `Bearer ${token}` } }),
         fetch('/api/Bird/getFamilies')
       ]);
 
       if (usersRes.ok) {
         const usersData = await usersRes.json();
-        if (usersData.success) setUsers(usersData.users);
+        if (usersData.success) {
+          setUsers(usersData.users.map((userData: UserData) => ({
+            ...userData,
+            userType: userData.userType ?? 2
+          })))
+        }
       }
 
       if (familiesRes.ok) {
@@ -66,7 +74,31 @@ const AdminPanel = () => {
     }
   }
 
-
+  const handleUserTypeChange = async (targetUserId: string, userType: UserType) => {
+    try {
+      const token = await user?.getIdToken()
+      if (!token) throw new Error('Authentication required')
+      const response = await fetch('/api/General/updateUserType', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ userId: targetUserId, userType })
+      })
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to update user type')
+      }
+      setUsers(current => current.map(existing =>
+        existing.uid === targetUserId ? { ...existing, userType } : existing
+      ))
+      toast.success('User type updated')
+    } catch (error: unknown) {
+      console.error('Error updating user type:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to update user type')
+    }
+  }
 
   const handleAddFamily = async (familyName: string, familyOf: string, taxoPos: number) => {
     setAddingFamily(true)
@@ -180,7 +212,7 @@ const AdminPanel = () => {
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">WhatsApp</th>
                   <th className="px-6 py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Photos Submitted</th>
                   <th className="px-6 py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Walks Attended</th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Role</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">UserType</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -196,9 +228,21 @@ const AdminPanel = () => {
                       <span className="bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-full">{u.walkCount}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${u.isAdmin ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-700/60 dark:text-slate-300'}`}>
-                        {u.isAdmin ? 'Admin' : 'User'}
-                      </span>
+                      <select
+                        aria-label={`User type for ${u.username}`}
+                        value={u.userType}
+                        onChange={(event) => {
+                          const value = Number(event.target.value)
+                          if (value === 0 || value === 1 || value === 2) {
+                            void handleUserTypeChange(u.uid, value)
+                          }
+                        }}
+                        className="input-field min-w-32 py-1.5 text-sm"
+                      >
+                        {Object.entries(userTypes).map(([value, label]) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
                     </td>
                   </tr>
                 ))}

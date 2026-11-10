@@ -1,9 +1,10 @@
 const { connectToDatabase } = require('../General/db');
+const { getAuthenticatedUserId } = require('../firebaseAdmin');
 
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
   };
 
@@ -16,15 +17,14 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const db = await connectToDatabase(context);
-    const userId = event.queryStringParameters?.userId;
-
+    const userId = await getAuthenticatedUserId(event);
     if (!userId) {
       return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
     }
 
+    const db = await connectToDatabase(context);
     const requestUser = await db.collection('users').findOne({ uid: userId });
-    if (!requestUser || !requestUser.isAdmin) {
+    if (!requestUser || requestUser.userType !== 0) {
       return { statusCode: 403, headers, body: JSON.stringify({ error: 'Admin access required' }) };
     }
 
@@ -53,7 +53,7 @@ exports.handler = async (event, context) => {
           email: 1,
           username: 1,
           whatsapp: 1,
-          isAdmin: 1,
+          userType: 1,
           photoCount: { $size: '$photos' },
           walkCount: { $size: '$walks' },
           createdAt: 1

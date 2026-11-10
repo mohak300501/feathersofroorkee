@@ -62,7 +62,7 @@ exports.handler = async (event, context) => {
         : null
     };
 
-    if (user.isAdmin) {
+    if (user.userType === 0) {
       const registrations = await db.collection('walkRegistrations').aggregate([
         {
           $match: {

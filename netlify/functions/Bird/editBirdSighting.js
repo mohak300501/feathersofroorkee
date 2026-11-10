@@ -27,8 +27,7 @@ exports.handler = async (event, context) => {
     const sighting = await db.collection('birdSightings').findOne({ _id: sightingObjectId });
     if (!sighting) return { statusCode: 404, headers, body: JSON.stringify({ error: 'Sighting not found' }) };
 
-    const isAdmin = userDoc.isAdmin === true;
-    if (sighting.userId !== userId && !isAdmin) {
+    if (sighting.userId !== userId && userDoc.userType !== 0) {
       return { statusCode: 403, headers, body: JSON.stringify({ error: 'Not authorized to edit this sighting' }) };
     }
 

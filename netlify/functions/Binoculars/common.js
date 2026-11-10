@@ -82,7 +82,7 @@ async function requireUser(db, userId) {
 
 async function requireAdmin(db, userId) {
   const user = await requireUser(db, userId);
-  if (!user.isAdmin) {
+  if (user.userType !== 0) {
     throw Object.assign(new Error('Admin privileges required'), { statusCode: 403 });
   }
   return user;

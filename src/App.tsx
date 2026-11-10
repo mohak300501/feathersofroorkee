@@ -5,7 +5,7 @@ import Footer from './components/Footer'
 import LoadingSpinner from './components/LoadingSpinner'
 import { lazy, Suspense, useEffect } from 'react'
 import About from './pages/About'
-import Author from './pages/Team'
+import Team from './pages/Team'
 import Guidelines from './pages/Guidelines'
 import Terms from './pages/Terms'
 
@@ -63,7 +63,7 @@ function App() {
             <Route path="/events" element={<Events />} />
             <Route path="/stats" element={<Stats />} />
             <Route path="/about" element={<About />} />
-            <Route path="/author" element={<Author />} />
+            <Route path="/team" element={<Team />} />
             <Route path="/guidelines" element={<Guidelines />} />
             <Route path="/terms" element={<Terms />} />
             {!user && (

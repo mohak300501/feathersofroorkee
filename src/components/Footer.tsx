@@ -68,10 +68,10 @@ const Footer = () => {
               About
             </Link>
             <Link
-              to="/author"
+              to="/team"
               className="text-sm text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
             >
-              Author
+              Team
             </Link>
             <Link
               to="/guidelines"

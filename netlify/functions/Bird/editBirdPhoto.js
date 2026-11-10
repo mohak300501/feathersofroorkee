@@ -26,7 +26,7 @@ exports.handler = async (event, context) => {
     const photoObjectId = new ObjectId(photoId);
     const photoDoc = await db.collection('birdPhotos').findOne({ _id: photoObjectId });
     if (!photoDoc) return { statusCode: 404, headers, body: JSON.stringify({ error: 'Photo not found' }) };
-    if (photoDoc.userId !== userId && userDoc.isAdmin !== true) return { statusCode: 403, headers, body: JSON.stringify({ error: 'Not authorized to edit this photo' }) };
+    if (photoDoc.userId !== userId && userDoc.userType !== 0) return { statusCode: 403, headers, body: JSON.stringify({ error: 'Not authorized to edit this photo' }) };
 
     const result = await db.collection('birdSightings').updateOne(
       { photoId: photoId },

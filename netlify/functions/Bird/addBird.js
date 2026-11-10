@@ -39,7 +39,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    if (!userDoc.isAdmin) {
+    if (userDoc.userType !== 0) {
       return {
         statusCode: 403,
         headers,

@@ -40,7 +40,6 @@ exports.handler = async (event, context) => {
         body: JSON.stringify({ error: 'User not found' }),
       };
     }
-    const isAdmin = userDoc.isAdmin === true;
 
     const photoObjectId = new ObjectId(photoId);
     const birdObjectId = new ObjectId(birdId);
@@ -56,7 +55,7 @@ exports.handler = async (event, context) => {
     }
 
     // Check permissions
-    if (photoDoc.userId !== userId && !isAdmin) {
+    if (photoDoc.userId !== userId && userDoc.userType !== 0) {
       return {
         statusCode: 403,
         headers,

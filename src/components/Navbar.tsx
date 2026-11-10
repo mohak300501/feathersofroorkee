@@ -15,7 +15,7 @@ const Navbar = () => {
   const [isMoreOpen, setIsMoreOpen] = useState(false)
 
   const navItems = [
-    { to: '/walks', label: 'Walks', icon: Footprints},
+    { to: '/walks', label: 'Walks', icon: Footprints },
     { to: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { to: '/checklist', label: 'Checklist', icon: ListChecks }
   ]
@@ -57,8 +57,12 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <div className="p-2 bg-gradient-to-br from-primary-500 to-bird-500 rounded-xl shadow-lg group-hover:shadow-primary-500/50 transition-all duration-300 transform group-hover:scale-105">
-              <Bird className="h-6 w-6 text-white" />
+            <div className="p-1 bg-gradient-to-br from-primary-500 to-bird-500 rounded-xl shadow-lg group-hover:shadow-primary-500/50 transition-all duration-300 transform group-hover:scale-105 overflow-hidden">
+              <img
+                src="/feathersIITR_cropped.png"
+                alt="Feathers of Roorkee Logo"
+                className="h-10 w-auto object-contain rounded-lg"
+              />
             </div>
             <span className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-bird-500 dark:from-primary-400 dark:to-bird-400 tracking-tight">Feathers of Roorkee</span>
           </Link>
@@ -144,7 +148,7 @@ const Navbar = () => {
 
             {/* Life Toggle */}
             <button>
-              {}
+              { }
             </button>
 
             {/* Theme Toggle */}
@@ -244,8 +248,8 @@ const Navbar = () => {
                   type="button"
                   onClick={() => setIsMoreOpen(prev => !prev)}
                   className={`flex w-full items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors ${isMoreActive
-                      ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   aria-expanded={isMoreOpen}
                 >
@@ -261,8 +265,8 @@ const Navbar = () => {
 
                 <div
                   className={`overflow-hidden transition-all duration-300 ease-in-out ${isMoreOpen
-                      ? 'max-h-64 opacity-100'
-                      : 'max-h-0 opacity-0'
+                    ? 'max-h-64 opacity-100'
+                    : 'max-h-0 opacity-0'
                     }`}
                 >
                   <div className="ml-5 pl-3 border-l border-slate-200 dark:border-slate-700">
@@ -275,8 +279,8 @@ const Navbar = () => {
                           setIsMoreOpen(false)
                         }}
                         className={`flex items-center space-x-2 px-3 py-2.5 rounded-lg text-sm transition-colors ${location.pathname === to
-                            ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
-                            : 'text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                          ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                           }`}
                       >
                         <Icon className="h-4 w-4" />

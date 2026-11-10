@@ -32,17 +32,26 @@ exports.handler = async (event, context) => {
     let userDoc = await db.collection('users').findOne({ uid });
 
     if (!userDoc) {
-      // Create new user (isAdmin defaults to false)
       const newUser = {
         uid,
         email,
         username: username || email.split('@')[0],
-        isAdmin: false,
+        userType: 2,
         createdAt: new Date()
       };
       
       await db.collection('users').insertOne(newUser);
       userDoc = newUser;
+    } else if (userDoc.userType === undefined) {
+      const legacyUserType = userDoc.isAdmin;
+      const userType = legacyUserType === true
+        ? 0
+        : [0, 1, 2].includes(legacyUserType) ? legacyUserType : 2;
+      await db.collection('users').updateOne(
+        { uid },
+        { $set: { userType }, $unset: { isAdmin: '' } }
+      );
+      userDoc = { ...userDoc, userType };
     }
 
     return {
@@ -54,10 +63,12 @@ exports.handler = async (event, context) => {
           uid: userDoc.uid,
           email: userDoc.email,
           username: userDoc.username,
+          userPhoto: userDoc.userPhoto || '',
           whatsapp: userDoc.whatsapp || '',
-          isAdmin: userDoc.isAdmin,
+          userType: userDoc.userType,
           institution: userDoc.institution || '',
-          role: userDoc.role || '',
+          designation: userDoc.designation || '',
+          status: userDoc.status || '',
           profession: userDoc.profession || '',
           department: userDoc.department || '',
           age: userDoc.age ?? null,

@@ -46,7 +46,7 @@ exports.handler = async (event, context) => {
 
     // Verify user is strictly admin
     const user = await db.collection('users').findOne({ uid: userId });
-    if (!user || !user.isAdmin) {
+    if (!user || user.userType !== 0) {
       return {
         statusCode: 403,
         headers,

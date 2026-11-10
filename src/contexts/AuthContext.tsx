@@ -13,7 +13,7 @@ import toast from 'react-hot-toast'
 
 interface OptionalInfo {
   institution: string
-  role: string
+  designation: string
   status: string
   profession: string
   department: string
@@ -27,6 +27,7 @@ interface AuthContextType {
   loading: boolean
   isAdmin: boolean
   username: string | null
+  userPhoto: string | null
   whatsapp: string | null
   optionalInfo: OptionalInfo
   login: (email: string, password: string) => Promise<void>
@@ -34,6 +35,7 @@ interface AuthContextType {
   logout: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
   updateProfile: (newUsername: string, newWhatsapp: string, newOptionalInfo?: OptionalInfo) => Promise<void>
+  updateUserPhoto: (photoUrl: string) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -51,10 +53,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [username, setUsername] = useState<string | null>(null)
+  const [userPhoto, setUserPhoto] = useState<string | null>(null)
   const [whatsapp, setWhatsapp] = useState<string | null>(null)
   const [optionalInfo, setOptionalInfo] = useState<OptionalInfo>({
     institution: '',
-    role: '',
+    designation: '',
     status: '',
     profession: '',
     department: '',
@@ -78,11 +81,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await response.json();
       if (data.success && data.user) {
         setUsername(data.user.username);
+        setUserPhoto(data.user.userPhoto || null);
         setWhatsapp(data.user.whatsapp);
-        setIsAdmin(!!data.user.isAdmin);
+        setIsAdmin(data.user.userType === 0);
         setOptionalInfo({
           institution: data.user.institution || '',
-          role: data.user.role || '',
+          designation: data.user.designation || '',
           status: data.user.status || '',
           profession: data.user.profession || '',
           department: data.user.department || '',
@@ -93,16 +97,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         console.error('Failed to sync user:', data.error, data.details || '')
         setUsername(null);
+        setUserPhoto(null);
         setWhatsapp(null);
         setIsAdmin(false);
-        setOptionalInfo({ institution: '', role: '', status: '', profession: '', department: '', year: '', age: '', gender: '' });
+        setOptionalInfo({ institution: '', designation: '', status: '', profession: '', department: '', year: '', age: '', gender: '' });
       }
     } catch (error) {
       console.error('Error syncing user data:', error)
       setUsername(null);
+      setUserPhoto(null);
       setWhatsapp(null);
       setIsAdmin(false);
-      setOptionalInfo({ institution: '', role: '', status: '', profession: '', department: '', year: '', age: '', gender: '' });
+      setOptionalInfo({ institution: '', designation: '', status: '', profession: '', department: '', year: '', age: '', gender: '' });
     }
   };
 
@@ -114,6 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setIsAdmin(false);
         setUsername(null);
+        setUserPhoto(null);
       }
       setLoading(false);
     })
@@ -209,18 +216,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateUserPhoto = (photoUrl: string) => setUserPhoto(photoUrl)
+
   const value = {
     user,
     loading,
     isAdmin,
     username,
+    userPhoto,
     whatsapp,
     optionalInfo,
     login,
     signup,
     logout,
     resetPassword,
-    updateProfile
+    updateProfile,
+    updateUserPhoto
   }
 
   return (
