@@ -113,7 +113,7 @@ const Profile = () => {
     try {
       const image = await compressImage(file, { maxWidth: 1200, maxHeight: 1200, maxSizeMB: 3.5 })
       const token = await user.getIdToken()
-      const response = await fetch('/api/General/uploadUserPhoto', {
+      const response = await fetch('/api/General/addUserPhoto', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

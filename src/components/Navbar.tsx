@@ -61,7 +61,7 @@ const Navbar = () => {
               <img
                 src="/feathersIITR_cropped.png"
                 alt="Feathers of Roorkee Logo"
-                className="h-10 w-auto object-contain rounded-lg"
+                className="h-10 w-auto object-contain rounded-xl"
               />
             </div>
             <span className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-bird-500 dark:from-primary-400 dark:to-bird-400 tracking-tight">Feathers of Roorkee</span>

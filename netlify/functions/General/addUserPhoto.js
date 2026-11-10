@@ -50,13 +50,19 @@ exports.handler = async (event, context) => {
       return { statusCode: 404, headers, body: JSON.stringify({ error: 'User not found' }) };
     }
 
-    const usernameFolder = String(user.username || userId).replace(/[^a-zA-Z0-9._-]/g, '') || userId;
+    // Retrieve the user's existing profile photo.
+    const previousPhotoPath = user.userPhoto;
+    const previousPhotoRecord = previousPhotoPath
+      ? await db.collection('userPhotos').findOne({ userId })
+      : null;
+
+    const usernameFormatted = String(user.username).replace(/[^a-zA-Z0-9._-]/g, '_');
     const originalFileName = path.basename(fileName).replace(/[^a-zA-Z0-9._-]/g, '_');
-    const uniqueFileName = `${Date.now()}-${originalFileName}`;
+    const usernameFileName = `${usernameFormatted}-${originalFileName}`;
     const uploadedFile = await uploadFileToImageKit(
       fileData,
-      uniqueFileName,
-      `@${usernameFolder}`
+      usernameFileName,
+      '/users'
     );
     imagekitFileId = uploadedFile.imagekitFileId;
     const { imagekitFilePath } = uploadedFile;
@@ -78,6 +84,26 @@ exports.handler = async (event, context) => {
     );
     if (!updateResult.matchedCount) {
       throw Object.assign(new Error('User not found'), { statusCode: 404 });
+    }
+
+    // Delete the previous profile photo from ImageKit and MongoDB.
+    if (
+      previousPhotoRecord &&
+      previousPhotoRecord.imagekitFileId !== imagekitFileId
+    ) {
+      try {
+        await deleteFileFromImageKit(previousPhotoRecord.imagekitFileId);
+
+        await db.collection('userPhotos').deleteOne({
+          _id: previousPhotoRecord._id
+        });
+
+        console.log('Previous profile photo deleted successfully');
+      } catch (deleteError) {
+        // Do not fail the successful profile photo update
+        // just because deletion of the old image failed.
+        console.error('Error deleting previous profile photo:', deleteError);
+      }
     }
 
     return {

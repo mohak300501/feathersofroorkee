@@ -91,7 +91,7 @@ const AddWalkModal = ({ onClose, onSuccess }: AddWalkModalProps) => {
       if (data && data.success) {
         onSuccess()
       } else {
-        setError(data?.error || 'Failed to create walk')
+        setError(data?.error ? data.error.message : 'Failed to create walk')
       }
     } catch (err: unknown) {
       console.error(err)

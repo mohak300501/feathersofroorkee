@@ -5,6 +5,10 @@ import { Plus, Trash2, Settings, Edit2, X, FolderTree, Users } from 'lucide-reac
 import toast from 'react-hot-toast'
 import { userTypes, type UserType } from '../utils/userTypes'
 
+const nonAdminUserTypes = Object.fromEntries(
+  Object.entries(userTypes).filter(([value]) => value !== '0')
+) as Partial<typeof userTypes>
+
 interface UserData {
   uid: string
   email: string
@@ -228,21 +232,27 @@ const AdminPanel = () => {
                       <span className="bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-full">{u.walkCount}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                      <select
-                        aria-label={`User type for ${u.username}`}
-                        value={u.userType}
-                        onChange={(event) => {
-                          const value = Number(event.target.value)
-                          if (value === 0 || value === 1 || value === 2) {
-                            void handleUserTypeChange(u.uid, value)
-                          }
-                        }}
-                        className="input-field min-w-32 py-1.5 text-sm"
-                      >
-                        {Object.entries(userTypes).map(([value, label]) => (
-                          <option key={value} value={value}>{label}</option>
-                        ))}
-                      </select>
+                      {u.userType ? (
+                        <select
+                          aria-label={`User type for ${u.username}`}
+                          value={u.userType}
+                          onChange={(event) => {
+                            const value = Number(event.target.value)
+                            if (value === 1 || value === 2) {
+                              void handleUserTypeChange(u.uid, value)
+                            }
+                          }}
+                          className="input-field py-1.5 text-sm"
+                        >
+                          {Object.entries(nonAdminUserTypes).map(([value, label]) => (
+                            <option key={value} value={value}>{label}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className={'px-2.5 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-400'}>
+                          Admin
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}

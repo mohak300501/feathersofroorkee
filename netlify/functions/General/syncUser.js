@@ -42,16 +42,6 @@ exports.handler = async (event, context) => {
       
       await db.collection('users').insertOne(newUser);
       userDoc = newUser;
-    } else if (userDoc.userType === undefined) {
-      const legacyUserType = userDoc.isAdmin;
-      const userType = legacyUserType === true
-        ? 0
-        : [0, 1, 2].includes(legacyUserType) ? legacyUserType : 2;
-      await db.collection('users').updateOne(
-        { uid },
-        { $set: { userType }, $unset: { isAdmin: '' } }
-      );
-      userDoc = { ...userDoc, userType };
     }
 
     return {

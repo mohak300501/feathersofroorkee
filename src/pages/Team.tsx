@@ -38,7 +38,7 @@ const Team = () => {
 
     return (
       <section className="space-y-6">
-        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">{title}</h2>
+        <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-200 pb-4 border-b border-slate-200 dark:border-slate-700">{title}</h2>
         {sectionMembers.length ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {sectionMembers.map(member => {

@@ -128,7 +128,7 @@ service cloud.firestore {
 
 **Note**: Function dependencies are included in the main package.json to avoid memory issues during build.
 
-**User roles**: Roles are stored in MongoDB in `users.userType`: `0` is Admin, `1` is Member, and `2` is User. Existing accounts with the legacy `isAdmin` field are migrated when they next sign in. To provision the initial admin, set that user's `userType` to `0` in MongoDB.
+**User roles**: Roles are stored in MongoDB in `users.userType`: `0` is Admin, `1` is Member, and `2` is User. To provision the initial admin, set that user's `userType` to `0` in MongoDB.
 
 **Google Drive Setup**: The app uses the same Firebase service account for Google Drive access. You need to set up a shared drive and provide both the shared drive ID and folder ID within that drive.
 
