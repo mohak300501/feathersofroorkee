@@ -60,6 +60,14 @@ exports.handler = async (event, context) => {
       };
     }
 
+    if (!user.whatsapp) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Kindly update your WhatsApp contact in your profile to register for birdwalks.' })
+      };
+    }
+
     // Lookup walk by _id or walkCode
     let walkQuery = { walkCode: walkId };
     if (ObjectId.isValid(walkId)) {

@@ -13,8 +13,7 @@ exports.handler = async (event, context) => {
   try {
     const db = await connectToDatabase(context);
     const members = await db.collection('users').find(
-      { userType: 0, status: { $in: ['Current', 'Former'] } },
-      { userType: 1, status: { $in: ['Current', 'Former'] } },
+      { userType: { $in : [0, 1]}, status: { $in: ['Current', 'Former'] } },
       { projection: { _id: 0, username: 1, userPhoto: 1, status: 1 } }
     ).sort({ username: 1 }).toArray();
 

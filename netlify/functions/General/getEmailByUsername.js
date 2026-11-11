@@ -1,4 +1,5 @@
 const { connectToDatabase } = require('./db');
+const createUsernameFilter = require('./usernameFilter');
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -18,7 +19,7 @@ exports.handler = async (event, context) => {
   try {
     const { username } = JSON.parse(event.body);
 
-    if (!username) {
+    if (typeof username !== 'string' || !username) {
       return {
         statusCode: 400,
         headers,
@@ -28,12 +29,9 @@ exports.handler = async (event, context) => {
 
     const db = await connectToDatabase(context);
     
-    // Perform case-insensitive check
-    const user = await db.collection('users').findOne({ 
-      username: { $regex: new RegExp(`^${username}$`, 'i') } 
-    });
+    const user = await db.collection('users').findOne(createUsernameFilter(username));
 
-    if (user) {
+    if (typeof user?.email === 'string' && user.email) {
       return {
         statusCode: 200,
         headers,

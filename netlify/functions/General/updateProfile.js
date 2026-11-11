@@ -1,4 +1,5 @@
 const { connectToDatabase } = require('./db');
+const createUsernameFilter = require('./usernameFilter');
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -30,7 +31,7 @@ exports.handler = async (event, context) => {
     // Check if the username is already taken by a DIFFERENT user
     if (username) {
       const existingUser = await db.collection('users').findOne({
-        username: { $regex: new RegExp(`^${username}$`, 'i') },
+        ...createUsernameFilter(username),
         uid: { $ne: uid }
       });
 

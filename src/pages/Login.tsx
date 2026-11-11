@@ -26,20 +26,38 @@ const Login = () => {
 
       // Check if identifier is not an email
       if (!identifier.includes('@')) {
-        const res = await fetch('/api/General/getEmailByUsername', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: identifier })
-        });
-        const data = await res.json();
+        let response: Response
+        let data: { email?: string; error?: string }
+        try {
+          response = await fetch('/api/General/getEmailByUsername', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: identifier })
+          })
+          data = await response.json()
+        } catch (error) {
+          console.error('Username lookup error:', error)
+          toast.error('Unable to look up username. Please try again.')
+          return
+        }
 
-        if (res.ok && data.email) {
-          loginEmail = data.email;
-        } else {
+        if (response.status === 404) {
           toast.error('User not found');
-          setLoading(false);
           return;
         }
+
+        if (!response.ok) {
+          console.error('Username lookup failed:', data.error || response.statusText)
+          toast.error('Unable to look up username. Please try again.')
+          return
+        }
+
+        if (!data.email) {
+          toast.error('No email address is associated with this username.')
+          return
+        }
+
+        loginEmail = data.email
       }
 
       await login(loginEmail, password)
