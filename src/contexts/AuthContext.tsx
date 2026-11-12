@@ -195,7 +195,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({
           uid: user.uid,
           username: newUsername,
-          ...(newWhatsapp? {whatsapp: newWhatsapp} : {}),
+          whatsapp: newWhatsapp ?? '',
           ...(newOptionalInfo ? { optionalInfo: newOptionalInfo } : {})
         })
       });
@@ -206,7 +206,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setUsername(newUsername);
-      if (newWhatsapp) setWhatsapp(newWhatsapp);
+      setWhatsapp(newWhatsapp ?? '');
       if (newOptionalInfo) setOptionalInfo(newOptionalInfo);
       toast.success('Profile updated successfully!');
     } catch (error: any) {

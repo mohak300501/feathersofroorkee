@@ -84,6 +84,17 @@ const RegisterWalkModal = ({ walkId, walkTitle, availableSlots, onClose, onSucce
             </div>
           )}
 
+          <div className="mb-6 flex flex-col items-center">
+            <img
+              src="/birdwalks_QR.jpg"
+              alt="BirdWalks WhatsApp group QR code"
+              className="w-44 h-44 object-contain rounded-lg border border-slate-200 p-2 bg-white"
+            />
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 text-center">
+              Scan to join the BirdWalks WhatsApp group
+            </p>
+          </div>
+
           <div className="mb-6 p-4 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 rounded-xl text-sm leading-relaxed border border-primary-100 dark:border-primary-900/30">
             Select how many spots you would like to reserve below.
           </div>

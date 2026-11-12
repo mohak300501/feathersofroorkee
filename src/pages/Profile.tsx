@@ -68,6 +68,12 @@ const Profile = () => {
       return
     }
 
+    const phoneRegex = /^[0-9]{10}$/
+    if (whatsapp && !phoneRegex.test(whatsapp)) {
+      toast.error('Please enter a valid 10-digit WhatsApp number')
+      return
+    }
+
     setLoading(true)
     try {
       await updateProfile(username, whatsapp, {

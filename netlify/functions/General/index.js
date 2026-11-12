@@ -8,6 +8,7 @@ const updateProfile = require('./updateProfile');
 const updateUserType = require('./updateUserType');
 const addUserPhoto = require('./addUserPhoto');
 const getTeamMembers = require('./getTeamMembers');
+const userDemographicStats = require('./userDemographicStats');
 
 const getUsers = require('./getUsers');
 
@@ -26,6 +27,7 @@ exports.handler = async (event, context) => {
     case 'updateUserType': return updateUserType.handler(event, context);
     case 'addUserPhoto': return addUserPhoto.handler(event, context);
     case 'getTeamMembers': return getTeamMembers.handler(event, context);
+    case 'userDemographicStats': return userDemographicStats.handler(event, context);
     default:
       return { statusCode: 404, body: JSON.stringify({ error: 'Function action not found in General' }) };
   }
