@@ -12,56 +12,80 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const { signup } = useAuth()
+  const { signup, googleSignIn } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!username || !email || !password || !confirmPassword) {
-      toast.error('Please fill in all fields')
-      return
+      toast.error('Please fill in all fields');
+      return;
     }
 
     if (password !== confirmPassword) {
-      toast.error('Passwords do not match')
-      return
+      toast.error('Passwords do not match');
+      return;
     }
 
     if (password.length < 6) {
-      toast.error('Password must be at least 6 characters long')
-      return
+      toast.error('Password must be at least 6 characters long');
+      return;
     }
 
-    if (username.length < 3) {
-      toast.error('Username must be at least 3 characters long')
-      return
+    if (username.trim().length < 3) {
+      toast.error('Username must be at least 3 characters long');
+      return;
     }
 
     setLoading(true)
     try {
       // Check if username is already taken
+      const trimmedUsername = username.trim();
       const checkRes = await fetch('/api/General/checkUsername', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username })
+        body: JSON.stringify({ username: trimmedUsername })
       });
 
       const checkData = await checkRes.json();
+      if (!checkRes.ok) throw new Error(checkData.error || 'Unable to verify username availability.');
+      if (typeof checkData.available !== 'boolean') {
+        throw new Error('Invalid response from username verification service.');
+      }
       if (!checkData.available) {
         toast.error('Username is already taken');
-        setLoading(false);
         return;
       }
 
-      await signup(username, email, password)
-      navigate('/')
+      await signup(username, email, password);
+      navigate('/');
     } catch (error) {
       console.error('Registration error:', error)
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
+
+  const handleGoogleSignUp = async () => {
+    const trimmedUsername = username.trim();
+
+    if (trimmedUsername.length < 3) {
+      toast.error('Please choose a username with at least 3 characters');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await googleSignIn(trimmedUsername);
+      navigate('/');
+    } catch (error) {
+      console.error('Google registration error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-transparent">
@@ -192,6 +216,28 @@ const SignUp = () => {
             </div>
           </form>
 
+          {/* Google Sign Up */}
+          <div className="mt-6">
+            <div className="relative flex items-center">
+              <div className="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
+              <span className="flex-shrink mx-4 text-sm text-slate-500 dark:text-slate-400">
+                OR
+              </span>
+              <div className="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGoogleSignUp}
+              disabled={loading}
+              className="mt-6 w-full flex justify-center items-center gap-3 py-3 px-4 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-white font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+            >
+              <img className="w-5 h-5" src="/google.svg" />
+
+              <span>Sign up with Google</span>
+            </button>
+          </div>
+
           <div className="mt-6 text-center">
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Already have an account?{' '}
@@ -210,6 +256,6 @@ const SignUp = () => {
       </div>
     </div>
   )
-}
+};
 
-export default SignUp 
+export default SignUp;

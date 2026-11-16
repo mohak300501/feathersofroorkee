@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { UserRound } from 'lucide-react'
-import LoadingSpinner from '../components/LoadingSpinner'
+import LoadingSpinner from '../components/General/LoadingSpinner'
 
 interface TeamMember {
   username: string

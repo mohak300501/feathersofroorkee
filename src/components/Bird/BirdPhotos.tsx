@@ -1,7 +1,7 @@
 import { Camera, Upload } from 'lucide-react'
 import BirdPhotoCard from './BirdPhotoCard'
-import type { BirdPhoto } from '../interfaces/BirdPhoto'
-import type { BirdSighting } from '../interfaces/BirdSighting'
+import type { BirdPhoto } from '../../interfaces/BirdPhoto'
+import type { BirdSighting } from '../../interfaces/BirdSighting'
 
 interface BirdPhotosProps {
   photos: BirdPhoto[]
@@ -25,7 +25,7 @@ const BirdPhotos = ({ photos, sightings, user, onAddPhoto, onDelete, onSetFeatur
         <div className="text-center">
           <button onClick={onAddPhoto} className="btn-primary inline-flex items-center space-x-2 shadow-xl hover:-translate-y-1">
             <Upload className="h-5 w-5" />
-            <span>Add Photo</span>
+            <span>Add a Photo</span>
           </button>
         </div>
       )}

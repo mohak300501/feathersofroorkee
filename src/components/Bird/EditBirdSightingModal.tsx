@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { SightingFields } from './AddBirdSightingModal'
-import type { BirdSighting, SightingFormData } from '../interfaces/BirdSighting'
+import type { BirdSighting, SightingFormData } from '../../interfaces/BirdSighting'
 
 interface EditBirdSightingModalProps {
   sighting: BirdSighting

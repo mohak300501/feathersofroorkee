@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import BirdCard from '../components/BirdCard'
-import LoadingSpinner from '../components/LoadingSpinner'
+import BirdCard from '../components/Bird/BirdCard'
+import LoadingSpinner from '../components/General/LoadingSpinner'
 import { Search, Bird as BirdIcon, Camera, Users, Dna, Info, Plus } from 'lucide-react'
 import { IUCN_STATUS_MAP } from '../utils/iucn_map'
 import { useAuth } from '../contexts/AuthContext'
-import AddBirdModal, { FamilyData } from '../components/AddBirdModal'
+import AddBirdModal, { FamilyData } from '../components/Bird/AddBirdModal'
 import toast from 'react-hot-toast'
 
 const AnimatedCounter = ({ target }: { target: number }) => {

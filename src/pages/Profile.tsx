@@ -9,10 +9,10 @@ const institutions = [
   'IITR Indian Institute of Technology Roorkee',
   'COER College of Engineering Roorkee',
   'CBRI Central Building Research Institute',
-  'Other',
+  'Other'
 ]
 
-const designations = ['Student', 'Faculty', 'Staff', 'Other']
+const designations = ['Student', 'Project', 'Faculty', 'Staff', 'Other']
 const statuses = ['Current', 'Former']
 const years = [
   'PhD 8th', 'PhD 7th', 'PhD 6th', 'PhD 5th', 'PhD 4th', 'PhD 3rd', 'PhD 2nd', 'PhD 1st',
@@ -61,17 +61,17 @@ const Profile = () => {
   }, [optionalInfo])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (username.trim().length < 3) {
-      toast.error("Username must be at least 3 characters long")
-      return
+      toast.error("Username must be at least 3 characters long");
+      return;
     }
 
     const phoneRegex = /^[0-9]{10}$/
     if (whatsapp && !phoneRegex.test(whatsapp)) {
-      toast.error('Please enter a valid 10-digit WhatsApp number')
-      return
+      toast.error('Please enter a valid 10-digit WhatsApp number');
+      return;
     }
 
     setLoading(true)
@@ -85,40 +85,33 @@ const Profile = () => {
         year: designation === 'Student' ? year : '',
         age,
         gender
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   const handleRoleChange = (value: string) => {
-    setRole(value)
+    setRole(value);
 
-    if (value === 'Other') {
-      setDepartment('')
-    } else {
-      setProfession('')
-    }
-  }
-
-  const handleAgeChange = (value: string) => {
-    setAge(value.replace(/\D/g, ''))
+    if (value === 'Other') setDepartment('');
+    else setProfession('');
   }
 
   const handlePhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file || !user) return
-    event.target.value = ''
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+    event.target.value = '';
 
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      toast.error('Please select a JPEG, PNG, or WebP image')
-      return
+      toast.error('Please select a JPEG, PNG, or WebP image');
+      return;
     }
 
-    setUploadingPhoto(true)
+    setUploadingPhoto(true);
     try {
-      const image = await compressImage(file, { maxWidth: 1200, maxHeight: 1200, maxSizeMB: 3.5 })
-      const token = await user.getIdToken()
+      const image = await compressImage(file, { maxWidth: 1200, maxHeight: 1200, maxSizeMB: 3.5 });
+      const token = await user.getIdToken();
       const response = await fetch('/api/General/addUserPhoto', {
         method: 'POST',
         headers: {
@@ -126,19 +119,17 @@ const Profile = () => {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(image)
-      })
-      const data = await response.json()
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to upload profile photo')
-      }
-      setUserPhoto(data.userPhoto)
-      updateUserPhoto(data.userPhoto)
-      toast.success('Profile photo updated')
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'Failed to upload profile photo');
+      setUserPhoto(data.userPhoto);
+      updateUserPhoto(data.userPhoto);
+      toast.success('Profile photo updated');
     } catch (error: unknown) {
-      console.error('Error uploading profile photo:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to upload profile photo')
+      console.error('Error uploading profile photo:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to upload profile photo');
     } finally {
-      setUploadingPhoto(false)
+      setUploadingPhoto(false);
     }
   }
 
@@ -180,237 +171,238 @@ const Profile = () => {
         </aside>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-        <div id="account-details" className="glass rounded-2xl p-8 shadow-xl animate-fade-in scroll-mt-24">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Account Details</h2>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              Update your account details.
-            </p>
-          </div>
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Email Address
-            </label>
-            <div className="relative opacity-75">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
-              <input
-                type="email"
-                value={user.email || ""}
-                disabled
-                className="input-field cursor-not-allowed pl-10"
-              />
+          <div id="account-details" className="glass rounded-2xl p-8 shadow-xl animate-fade-in scroll-mt-24">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Account Details</h2>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                Update your account details.
+              </p>
             </div>
-            <p className="mt-1 text-xs text-slate-500">Email address cannot be changed.</p>
-          </div>
 
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Username
-            </label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
-              <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                className="input-field pl-10"
-                placeholder="Choose a username"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="whatsapp" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              WhatsApp Contact
-            </label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
-              <input
-                id="whatsapp"
-                type="text"
-                value={whatsapp || ""}
-                onChange={(e) => setWhatsapp(e.target.value)}
-                className="input-field pl-10"
-                placeholder="Enter a 10-digit number"
-              />
-            </div>
-            <p className="mt-1 text-xs text-slate-500">Required for BirdWalk registration.</p>
-          </div>
-
-        </div>
-
-        <div id="optional-info" className="glass rounded-2xl p-8 shadow-xl animate-fade-in scroll-mt-24">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Optional Info</h2>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              Updating this info will help us generate anonymous stats.<br />
-              Rest assured, this info won't be displayed publicly.
-            </p>
-          </div>
-          <div>
-            <label htmlFor="institution" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Institution
-            </label>
-            <select
-              id="institution"
-              value={institution}
-              onChange={(e) => setInstitution(e.target.value)}
-              className="input-field"
-            >
-              <option value="">Select institution</option>
-              {institutions.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="designation" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Designation
-            </label>
-            <select
-              id="designation"
-              value={designation}
-              onChange={(e) => handleRoleChange(e.target.value)}
-              className="input-field"
-            >
-              <option value="">Select designation</option>
-              {designations.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="status" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Status
-            </label>
-            <select
-              id="status"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="input-field"
-            >
-              <option value="">Select designation status</option>
-              {statuses.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-
-          {designation === 'Other' ? (
             <div>
-              <label htmlFor="profession" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Profession
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Email Address
+              </label>
+              <div className="relative opacity-75">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
+                <input
+                  type="email"
+                  value={user.email || ""}
+                  disabled
+                  className="input-field cursor-not-allowed pl-10"
+                />
+              </div>
+              <p className="mt-1 text-xs text-slate-500">Email address cannot be changed.</p>
+            </div>
+
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Username
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
+                <input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  className="input-field pl-10"
+                  placeholder="Choose a username"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="whatsapp" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                WhatsApp Contact
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
+                <input
+                  id="whatsapp"
+                  type="text"
+                  value={whatsapp || ""}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  className="input-field pl-10"
+                  placeholder="Enter a 10-digit number"
+                />
+              </div>
+              <p className="mt-1 text-xs text-slate-500">Required for BirdWalk registration.</p>
+            </div>
+
+          </div>
+
+          <div id="optional-info" className="glass rounded-2xl p-8 shadow-xl animate-fade-in scroll-mt-24">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Optional Info</h2>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                Updating this info will help us generate anonymous stats.<br />
+                Rest assured, this info won't be displayed publicly.
+              </p>
+            </div>
+            <div>
+              <label htmlFor="institution" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Institution
               </label>
               <select
-                id="profession"
-                value={profession}
-                onChange={(e) => setProfession(e.target.value)}
+                id="institution"
+                value={institution}
+                onChange={(e) => setInstitution(e.target.value)}
                 className="input-field"
               >
-                <option value="">Select profession</option>
-                {professions.map((option) => (
+                <option value="">Select institution</option>
+                {institutions.map((option) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </select>
             </div>
-          ) : (
-            <div>
-              <label htmlFor="department" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Department
-              </label>
-              <select
-                id="department"
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                className="input-field"
-              >
-                <option value="">Select department</option>
-                {Object.entries(DEPT_MAP).map(([code, { dept }]) => (
-                  <option key={code} value={code}>{code} {dept}</option>
-                ))}
-              </select>
-            </div>
-          )}
 
-          {designation === 'Student' && status === 'Current' &&
             <div>
-              <label htmlFor="year" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Year
+              <label htmlFor="designation" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Designation
               </label>
               <select
-                id="year"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
+                id="designation"
+                value={designation}
+                onChange={(e) => handleRoleChange(e.target.value)}
                 className="input-field"
               >
-                <option value="">Select year of study</option>
-                {years.map((option) => (
+                <option value="">Select designation</option>
+                {designations.map((option) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </select>
             </div>
-          }
 
-          <div>
-            <label htmlFor="age" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Age
-            </label>
-            <input
-              id="age"
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={age}
-              onChange={(e) => handleAgeChange(e.target.value)}
-              className="input-field"
-              placeholder="Enter age"
-              aria-label="Age"
-            />
-          </div>
+            <div>
+              <label htmlFor="status" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Status
+              </label>
+              <select
+                id="status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="input-field"
+              >
+                <option value="">Select designation status</option>
+                {statuses.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
 
-          <div>
-            <label htmlFor="gender" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Gender
-            </label>
-            <select
-              id="gender"
-              value={gender}
-              onChange={(e) => setGender(e.target.value)}
-              className="input-field"
-            >
-              <option value="">Select gender</option>
-              {genders.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="pt-4">
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary w-full sm:w-auto flex items-center justify-center space-x-2"
-          >
-            {loading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Saving...</span>
-              </>
+            {designation === 'Other' ? (
+              <div>
+                <label htmlFor="profession" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Profession
+                </label>
+                <select
+                  id="profession"
+                  value={profession}
+                  onChange={(e) => setProfession(e.target.value)}
+                  className="input-field"
+                >
+                  <option value="">Select profession</option>
+                  {professions.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
             ) : (
-              <>
-                <Save className="h-5 w-5" />
-                <span>Save Changes</span>
-              </>
+              <div>
+                <label htmlFor="department" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Department
+                </label>
+                <select
+                  id="department"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  className="input-field"
+                >
+                  <option value="">Select department</option>
+                  {Object.entries(DEPT_MAP).map(([code, { dept }]) => (
+                    <option key={code} value={code}>{code} {dept}</option>
+                  ))}
+                </select>
+              </div>
             )}
-          </button>
-        </div>
-      </form>
+
+            {designation === 'Student' && status === 'Current' &&
+              <div>
+                <label htmlFor="year" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Year
+                </label>
+                <select
+                  id="year"
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                  className="input-field"
+                >
+                  <option value="">Select year of study</option>
+                  {years.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+            }
+
+            <div>
+              <label htmlFor="age" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Age
+              </label>
+              <input
+                id="age"
+                type="number"
+                min="1"
+                max="120"
+                step="1"
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                className="input-field"
+                placeholder="Enter age"
+                aria-label="Age"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="gender" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Gender
+              </label>
+              <select
+                id="gender"
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className="input-field"
+              >
+                <option value="">Select gender</option>
+                {genders.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="pt-4">
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full sm:w-auto flex items-center justify-center space-x-2"
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="h-5 w-5" />
+                  <span>Save Changes</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
         <aside className="glass rounded-2xl p-6 shadow-xl md:sticky md:top-24 md:self-start">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Sections</h2>
           <nav aria-label="Profile sections" className="space-y-2">
@@ -427,4 +419,4 @@ const Profile = () => {
   )
 }
 
-export default Profile
+export default Profile;

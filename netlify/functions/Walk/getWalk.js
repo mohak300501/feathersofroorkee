@@ -68,12 +68,46 @@ exports.handler = async (event, context) => {
         },
         {
           $addFields: {
-            username: { $arrayElemAt: ['$user.username', 0] }
+            username: { $arrayElemAt: ['$user.username', 0] },
+            info: { $ifNull: ['$info', '$experience', ''] }
           }
         },
         {
           $project: {
             user: 0 // exclude the full user array
+          }
+        }
+      ])
+      .toArray();
+
+    const walkExperiences = await db.collection('walkExperiences')
+      .aggregate([
+        {
+          $match: {
+            $or: [
+              { walkId: walk._id.toString() },
+              { walkId: walk.walkCode }
+            ]
+          }
+        },
+        { $sort: { addedAt: -1 } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: 'uid',
+            as: 'user'
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            id: { $toString: '$_id' },
+            userId: 1,
+            walkId: 1,
+            info: 1,
+            addedAt: 1,
+            username: { $ifNull: [{ $arrayElemAt: ['$user.username', 0] }, 'Unknown user'] }
           }
         }
       ])
@@ -95,7 +129,8 @@ exports.handler = async (event, context) => {
         featuredPhoto: walk.featuredPhoto,
         addedBy: walk.addedBy,
         addedAt: walk.addedAt,
-        walkPhotos
+        walkPhotos,
+        walkExperiences
       }),
     };
   } catch (error) {

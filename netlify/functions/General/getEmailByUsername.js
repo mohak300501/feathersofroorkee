@@ -17,19 +17,22 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { username } = JSON.parse(event.body);
+    let requestData;
+    try {
+      requestData = JSON.parse(event.body || '{}');
+    } catch {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON payload' }) };
+    }
 
-    if (typeof username !== 'string' || !username) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Missing username' }),
-      };
+    const { username } = requestData;
+
+    if (typeof username !== 'string' || username.trim().length < 3) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing username' }) };
     }
 
     const db = await connectToDatabase(context);
-    
-    const user = await db.collection('users').findOne(createUsernameFilter(username));
+
+    const user = await db.collection('users').findOne(createUsernameFilter(username.trim()));
 
     if (typeof user?.email === 'string' && user.email) {
       return {

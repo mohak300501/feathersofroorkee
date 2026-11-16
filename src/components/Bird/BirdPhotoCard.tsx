@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Calendar, MapPin, Pin, Heart, User, Trash2, Eye, Star, Edit3, ArrowRightLeft, X } from 'lucide-react'
 import { format } from 'date-fns'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../../contexts/AuthContext'
 import toast from 'react-hot-toast'
-import type { BirdPhoto } from '../interfaces/BirdPhoto'
+import type { BirdPhoto } from '../../interfaces/BirdPhoto'
 
 interface BirdPhotoCardProps extends BirdPhoto {
   onDelete: (photoId: string) => Promise<void>
@@ -105,7 +105,7 @@ const BirdPhotoCard = ({
               <button
                 onClick={() => onEditInfo(id)}
                 className="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded-full transition-colors duration-200 shadow-lg"
-                title="Edit Info"
+                title="Edit Your Experience"
               >
                 <Edit3 className="h-4 w-4" />
               </button>
@@ -142,6 +142,16 @@ const BirdPhotoCard = ({
         </div>
 
         <div className="p-4 space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400 min-w-0">
+              <User className="h-4 w-4 shrink-0 text-slate-400" />
+              <span className="text-primary-600 dark:text-primary-400 truncate">@{username}</span>
+            </div>
+            <button type="button" onClick={handleHeart} className="flex items-center gap-1.5 text-red-500 transition-colors" title={hasHearted ? "Remove heart" : "Give a heart"}>
+              <Heart className={`h-5 w-5 ${user ? 'hover:fill-current' : ''} ${hasHearted ? 'fill-current' : ''}`} />
+              <span className="font-semibold">{hearts ?? 0}</span>
+            </button>
+          </div>
           <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400">
             <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
             <span>{sighting?.location || 'Location unavailable'}</span>
@@ -161,16 +171,6 @@ const BirdPhotoCard = ({
           <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400">
             <Calendar className="h-4 w-4 shrink-0 text-slate-400" />
             <span>{sighting ? format(new Date(sighting.datetimeOfSighting), 'MMM dd, yyyy • HH:mm') : 'Date unavailable'}</span>
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400 min-w-0">
-              <User className="h-4 w-4 shrink-0 text-slate-400" />
-              <span className="truncate">{username}</span>
-            </div>
-            <button type="button" onClick={handleHeart} className="flex items-center gap-1.5 text-red-500 transition-colors" title={hasHearted ? "Remove heart" : "Give a heart"}>
-              <Heart className={`h-5 w-5 ${user ? 'hover:fill-current' : ''} ${hasHearted ? 'fill-current' : ''}`} />
-              <span className="font-semibold">{hearts ?? 0}</span>
-            </button>
           </div>
         </div>
       </div>

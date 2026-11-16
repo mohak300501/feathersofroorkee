@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { X, Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { SightingFields } from './AddBirdSightingModal'
-import type { SightingFormData } from '../interfaces/BirdSighting'
+import type { SightingFormData } from '../../interfaces/BirdSighting'
 
 // Upload Modal Component
 interface AddBirdPhotoModalProps {

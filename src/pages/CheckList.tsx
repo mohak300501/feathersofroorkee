@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import LoadingSpinner from '../components/LoadingSpinner'
+import LoadingSpinner from '../components/General/LoadingSpinner'
 import { CheckSquare } from 'lucide-react'
 
 interface Bird {

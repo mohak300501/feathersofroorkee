@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { X, Calendar, MapPin, AlignLeft, Users } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
-import type { Walk } from '../interfaces/Walk'
-import { parseApiResponse } from '../utils/imageCompressor'
+import { useAuth } from '../../contexts/AuthContext'
+import type { Walk } from '../../interfaces/Walk'
+import { parseApiResponse } from '../../utils/imageCompressor'
 
 interface EditWalkModalProps {
   walk: Walk
@@ -70,7 +70,7 @@ const EditWalkModal = ({ walk, onClose, onSuccess }: EditWalkModalProps) => {
         body: JSON.stringify(payload)
       })
 
-      const data = await parseApiResponse(response)
+      const data = await parseApiResponse<{ success?: boolean; error?: string }>(response)
       if (data && data.success) {
         onSuccess()
       } else {

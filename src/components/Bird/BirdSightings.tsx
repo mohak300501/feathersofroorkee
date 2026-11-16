@@ -1,6 +1,6 @@
 import { Plus, Edit2, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
-import type { BirdSighting } from '../interfaces/BirdSighting'
+import type { BirdSighting } from '../../interfaces/BirdSighting'
 
 interface BirdSightingsProps {
   sightings: BirdSighting[]
@@ -22,7 +22,7 @@ const BirdSightings = ({ sightings, user, isAdmin, onAddSighting, onCoordinateCl
         <div className="flex justify-end">
           <button onClick={onAddSighting} className="btn-primary inline-flex items-center gap-2 shadow-xl hover:-translate-y-1">
             <Plus className="h-5 w-5" />
-            Add Sighting
+            Add a Sighting
           </button>
         </div>
       )}

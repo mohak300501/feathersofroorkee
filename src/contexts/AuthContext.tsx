@@ -1,8 +1,11 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   User,
+  GoogleAuthProvider,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   onAuthStateChanged,
   sendEmailVerification,
@@ -32,6 +35,7 @@ interface AuthContextType {
   optionalInfo: OptionalInfo
   login: (email: string, password: string) => Promise<void>
   signup: (username: string, email: string, password: string) => Promise<void>
+  googleSignIn: (username?: string) => Promise<void>
   logout: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
   updateProfile: (newUsername: string, newWhatsapp: string, newOptionalInfo?: OptionalInfo) => Promise<void>
@@ -49,12 +53,13 @@ export const useAuth = () => {
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [username, setUsername] = useState<string | null>(null)
-  const [userPhoto, setUserPhoto] = useState<string | null>(null)
-  const [whatsapp, setWhatsapp] = useState<string | null>(null)
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const googleAuthInProgress = useRef(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
+  const [userPhoto, setUserPhoto] = useState<string | null>(null);
+  const [whatsapp, setWhatsapp] = useState<string | null>(null);
   const [optionalInfo, setOptionalInfo] = useState<OptionalInfo>({
     institution: '',
     designation: '',
@@ -64,68 +69,99 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     year: '',
     age: '',
     gender: ''
-  })
+  });
+  const navigate = useNavigate()
 
   const syncUserWithBackend = async (firebaseUser: User, customUsername?: string) => {
-    try {
-      const response = await fetch('/api/General/syncUser', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          username: customUsername || firebaseUser.email?.split('@')[0]
-        })
-      });
+    if (!firebaseUser.email) throw new Error('Firebase account does not have an email address.');
 
-      const data = await response.json();
-      if (data.success && data.user) {
-        setUsername(data.user.username);
-        setUserPhoto(data.user.userPhoto || null);
-        setWhatsapp(data.user.whatsapp);
-        setIsAdmin(data.user.userType === 0);
-        setOptionalInfo({
-          institution: data.user.institution || '',
-          designation: data.user.designation || '',
-          status: data.user.status || '',
-          profession: data.user.profession || '',
-          department: data.user.department || '',
-          year: data.user.year || '',
-          age: data.user.age != null ? String(data.user.age) : '',
-          gender: data.user.gender || ''
-        });
-      } else {
-        console.error('Failed to sync user:', data.error, data.details || '')
-        setUsername(null);
-        setUserPhoto(null);
-        setWhatsapp(null);
-        setIsAdmin(false);
-        setOptionalInfo({ institution: '', designation: '', status: '', profession: '', department: '', year: '', age: '', gender: '' });
-      }
-    } catch (error) {
-      console.error('Error syncing user data:', error)
-      setUsername(null);
-      setUserPhoto(null);
-      setWhatsapp(null);
-      setIsAdmin(false);
-      setOptionalInfo({ institution: '', designation: '', status: '', profession: '', department: '', year: '', age: '', gender: '' });
+    const token = await firebaseUser.getIdToken();
+    const response = await fetch('/api/General/syncUser', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        ...(customUsername !== undefined ? { username: customUsername.trim() } : {})
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success || !data.user) {
+      throw new Error(
+        data.error || `User synchronization failed (HTTP ${response.status}).`
+      );
     }
+    setUsername(data.user.username);
+    setUserPhoto(data.user.userPhoto || null);
+    setWhatsapp(data.user.whatsapp);
+    setIsAdmin(data.user.userType === 0);
+    setOptionalInfo({
+      institution: data.user.institution || '',
+      designation: data.user.designation || '',
+      status: data.user.status || '',
+      profession: data.user.profession || '',
+      department: data.user.department || '',
+      year: data.user.year || '',
+      age: data.user.age != null ? String(data.user.age) : '',
+      gender: data.user.gender || ''
+    });
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
-        await syncUserWithBackend(user);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+      if (firebaseUser) {
+
+        // Google authentication performs its own synchronization.
+        if (googleAuthInProgress.current) {
+          setLoading(false);
+          return;
+        }
+
+        try {
+          // Synchronize existing users only.
+          // New users must be created through signup with an explicit username.
+          await syncUserWithBackend(firebaseUser);
+        } catch (error) {
+          console.error('Authentication sync error:', error);
+
+          setUsername(null);
+          setUserPhoto(null);
+          setWhatsapp(null);
+          setIsAdmin(false);
+          setOptionalInfo({
+            institution: '',
+            designation: '',
+            status: '',
+            profession: '',
+            department: '',
+            year: '',
+            age: '',
+            gender: ''
+          });
+        }
       } else {
         setIsAdmin(false);
         setUsername(null);
         setUserPhoto(null);
+        setWhatsapp(null);
+        setOptionalInfo({
+          institution: '',
+          designation: '',
+          status: '',
+          profession: '',
+          department: '',
+          year: '',
+          age: '',
+          gender: ''
+        });
       }
+
       setLoading(false);
-    })
+    });
     return unsubscribe;
-  }, [])
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {
@@ -145,15 +181,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const signup = async (username: string, email: string, password: string) => {
+    const trimmedUsername = username.trim();
+    if (trimmedUsername.length < 3) throw new Error('Username must be at least 3 characters long.');
+
+    let firebaseUser: User | null = null;
+
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      await sendEmailVerification(user);
+      const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      firebaseUser = userCredential.user;
 
-      // Sync immediately on signup to create the document
-      await syncUserWithBackend(user, username);
-
+      // Create/update MongoDB document using the explicitly chosen username.
+      // Sync user immediately to create new document.
+      await syncUserWithBackend(firebaseUser, trimmedUsername);
+      await sendEmailVerification(firebaseUser);
       toast.success('Registration successful! Please check your email to verify your account.');
+
       // Do not log in user immediately after registration
       await signOut(auth);
     } catch (error: any) {
@@ -163,9 +205,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
+  const googleSignIn = async (chosenUsername?: string) => {
+    googleAuthInProgress.current = true;
+
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const firebaseUser = result.user;
+
+      if (!firebaseUser.email) throw new Error('Google account does not have an email address.');
+
+      try {
+        // First, attempt to synchronize an existing MongoDB user.
+        await syncUserWithBackend(firebaseUser);
+      } catch (error: unknown) {
+        console.error('Google authentication error:', error);
+        if (auth.currentUser) await signOut(auth);
+
+        const message = error instanceof Error ? error.message : 'Google sign-in failed. Please try again.';
+        toast.error(message);
+
+        // A new MongoDB user must provide a username.
+        if (message.includes('Username is required') && chosenUsername) {
+          const trimmedUsername = chosenUsername.trim();
+          if (trimmedUsername.length < 3) throw new Error('Username must be at least 3 characters long.');
+
+          // Create the new MongoDB user with the chosen username.
+          await syncUserWithBackend(firebaseUser, trimmedUsername);
+
+        } else if (message.includes('Username is required')) {
+          throw new Error('This Google account is not registered yet. Please sign up first and choose a username.');
+        } else {
+          throw error;
+        }
+      } finally {
+        googleAuthInProgress.current = false;
+      }
+
+      toast.success('Successfully signed in with Google!');
+    } catch (error: unknown) {
+      console.error('Google authentication error:', error);
+
+      // Avoid leaving an authenticated Firebase session without
+      // a successfully synchronized MongoDB account.
+      if (auth.currentUser) await signOut(auth);
+
+      const message = error instanceof Error
+        ? error.message
+        : 'Google sign-in failed. Please try again.';
+
+      toast.error(message);
+      throw error;
+    }
+  };
+
   const logout = async () => {
     try {
       await signOut(auth);
+      navigate('/login');
       toast.success('Successfully logged out!');
     } catch (error: any) {
       console.error('Logout error:', error);
@@ -228,6 +327,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     optionalInfo,
     login,
     signup,
+    googleSignIn,
     logout,
     resetPassword,
     updateProfile,

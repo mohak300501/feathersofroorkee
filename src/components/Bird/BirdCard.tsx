@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Bird, Camera } from 'lucide-react'
-import { IUCN_STATUS_MAP } from '../utils/iucn_map'
+import { IUCN_STATUS_MAP } from '../../utils/iucn_map'
 
 interface BirdCardProps {
   id: string

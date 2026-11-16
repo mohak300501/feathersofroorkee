@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { X, Users } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
-import { parseApiResponse } from '../utils/imageCompressor'
+import { useAuth } from '../../contexts/AuthContext'
+import { parseApiResponse } from '../../utils/imageCompressor'
 
 interface RegisterWalkModalProps {
   walkId: string
@@ -47,11 +47,11 @@ const RegisterWalkModal = ({ walkId, walkTitle, availableSlots, onClose, onSucce
         body: JSON.stringify(payload)
       })
 
-      const data = await parseApiResponse(response)
+      const data = await parseApiResponse<{ success?: boolean; error?: string }>(response)
       if (data && data.success) {
         onSuccess()
       } else {
-        setError(data?.error ? String(data.error) : 'Failed to complete registration')
+        setError(data?.error || 'Failed to complete registration')
       }
     } catch (err: unknown) {
       console.error(err)

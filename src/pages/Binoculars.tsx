@@ -6,10 +6,10 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../contexts/AuthContext'
-import AddBinocModal from '../components/AddBinocModal'
-import EditBinocModal from '../components/EditBinocModal'
-import ScanModal from '../components/ScanBinocModal'
-import BorrowModal, { ScannedBinocular } from '../components/BorrowBinocModal'
+import AddBinocModal from '../components/Binoculars/AddBinocModal'
+import EditBinocModal from '../components/Binoculars/EditBinocModal'
+import ScanModal from '../components/Binoculars/ScanBinocModal'
+import BorrowModal, { ScannedBinocular } from '../components/Binoculars/BorrowBinocModal'
 import type { Binocular, InventoryRow, TransactionRow } from '../interfaces/Binoc'
 
 const Binoculars = () => {

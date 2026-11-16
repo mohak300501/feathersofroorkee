@@ -1,7 +1,7 @@
 import { MapContainer, TileLayer, CircleMarker, useMap, useMapEvents } from 'react-leaflet'
 import type { LeafletMouseEvent } from 'leaflet'
 import { useEffect } from 'react'
-import type { BirdSighting } from '../interfaces/BirdSighting'
+import type { BirdSighting } from '../../interfaces/BirdSighting'
 
 import 'leaflet/dist/leaflet.css'
 

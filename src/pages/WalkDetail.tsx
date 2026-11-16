@@ -1,14 +1,17 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import LoadingSpinner from '../components/LoadingSpinner'
-import WalkPhotoCard from '../components/WalkPhotoCard'
-import AddWalkPhotoModal from '../components/AddWalkPhotoModal'
-import EditWalkModal from '../components/EditWalkModal'
-import RegisterWalkModal from '../components/RegisterWalkModal'
-import type { WalkDetail as WalkDetailType } from '../interfaces/Walk'
-import { Calendar, MapPin, Users, Edit, Trash2, Camera, ExternalLink, ArrowLeft,
-  Plus, X, CheckCircle, Download, Clock, Sparkles } from 'lucide-react'
+import LoadingSpinner from '../components/General/LoadingSpinner'
+import WalkPhotos from '../components/Walk/WalkPhotos'
+import WalkExperiences from '../components/Walk/WalkExperiences'
+import AddWalkPhotoModal from '../components/Walk/AddWalkPhotoModal'
+import EditWalkModal from '../components/Walk/EditWalkModal'
+import RegisterWalkModal from '../components/Walk/RegisterWalkModal'
+import type { WalkDetail as WalkDetailType, WalkExperience } from '../interfaces/Walk'
+import {
+  Calendar, MapPin, Users, Edit, Trash2, Camera, ExternalLink, ArrowLeft,
+  Plus, X, CheckCircle, Download, Clock, Pen
+} from 'lucide-react'
 import toast from 'react-hot-toast'
 import { parseApiResponse } from '../utils/imageCompressor'
 
@@ -19,6 +22,7 @@ const WalkDetail = () => {
 
   const [walk, setWalk] = useState<WalkDetailType | null>(null)
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'photos' | 'experiences'>('photos')
   const [error, setError] = useState<string | null>(null)
 
   // Modals state
@@ -106,6 +110,139 @@ const WalkDetail = () => {
   useEffect(() => {
     fetchWalkRegistration()
   }, [fetchWalkRegistration])
+
+  const handleAddWalkExperience = async (info: string) => {
+    if (!walk || !user) throw new Error('Please login to share your experience.')
+    const token = await user.getIdToken()
+    const response = await fetch('/api/Walk/addWalkExperience', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ walkId: walk._id, userId: user.uid, info })
+    })
+    const result = await parseApiResponse<{ info: WalkExperience }>(response)
+    setWalk((current) => current
+      ? { ...current, walkExperiences: [result.info, ...current.walkExperiences] }
+      : current)
+    toast.success('Experience shared successfully')
+  }
+
+  const handleEditWalkExperience = async (experienceId: string, info: string) => {
+    if (!user) throw new Error('Please login to edit this experience.')
+    const token = await user.getIdToken()
+    const response = await fetch('/api/Walk/editWalkExperience', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ experienceId, userId: user.uid, info })
+    })
+    await parseApiResponse(response)
+    setWalk((current) => current
+      ? {
+        ...current,
+        walkExperiences: current.walkExperiences.map((item) =>
+          item.id === experienceId ? { ...item, info } : item)
+      }
+      : current)
+    toast.success('Experience updated successfully')
+  }
+
+  const handleEditWalkPhoto = async (photoId: string, info: string) => {
+    if (!user) throw new Error('Please login to edit this photo.')
+    const token = await user.getIdToken()
+    const response = await fetch('/api/Walk/editWalkPhoto', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ photoId, userId: user.uid, info })
+    })
+    await parseApiResponse(response)
+    setWalk((current) => current
+      ? {
+        ...current,
+        walkPhotos: current.walkPhotos.map((photo) =>
+          photo._id === photoId ? { ...photo, info } : photo)
+      }
+      : current)
+    toast.success('Photo info updated')
+  }
+  const handleDeleteWalkPhoto = async (photoId: string) => {
+    if (!walk || !user) return
+
+    if (!window.confirm('Are you sure you want to delete this photo?')) return
+
+    try {
+      const token = await user.getIdToken()
+
+      const response = await fetch('/api/Walk/deleteWalkPhoto', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ walkId: walk._id, photoId, userId: user.uid })
+      })
+
+      await parseApiResponse(response)
+
+      setWalk(current => current
+        ? {
+          ...current,
+          walkPhotos: current.walkPhotos.filter(
+            photo => photo._id !== photoId
+          )
+        }
+        : current
+      )
+
+      toast.success('Photo deleted successfully')
+    } catch (error) {
+      console.error('Error deleting walk photo:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to delete photo')
+    }
+  }
+
+  const handleDeleteWalkExperience = async (experienceId: string) => {
+    if (!walk || !user) return
+
+    if (!window.confirm('Are you sure you want to delete this experience?')) return
+
+    try {
+      const token = await user.getIdToken()
+
+      const response = await fetch('/api/Walk/deleteWalkExperience', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ walkId: walk._id, experienceId, userId: user.uid })
+      })
+
+      await parseApiResponse(response)
+
+      setWalk(current => current
+        ? {
+          ...current,
+          walkExperiences: current.walkExperiences.filter(
+            item => item.id !== experienceId
+          )
+        }
+        : current
+      )
+
+      toast.success('Experience deleted successfully')
+    } catch (error) {
+      console.error('Error deleting walk experience:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to delete experience')
+    }
+  }
 
   const handleCancelRegistration = async () => {
     if (!walk || !user || !window.confirm('Are you sure you want to cancel your registration?')) return
@@ -489,23 +626,38 @@ const WalkDetail = () => {
         </section>
       )}
 
-      {/* Walk Memories & Gallery Section */}
-      <section className="space-y-6 pt-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center space-x-2">
-              <Sparkles className="w-5 h-5 text-primary-500" />
-              <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white">
-                Walk Memories & Experiences
-              </h2>
-            </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Photos and stories shared by participants and birdwatchers from this walk.
-            </p>
-          </div>
-
+      <section className="max-w-6xl mx-auto">
+        <div className="flex max-w-sm h-12 rounded-xl overflow-hidden shadow-lg mb-8 mx-auto">
           <button
-            onClick={() => {
+            onClick={() => setActiveTab('photos')}
+            className={`flex-1 flex items-center justify-center space-x-2 px-5 py-3 text-sm font-medium transition-all
+              ${activeTab === 'photos' ?
+                'text-white bg-gradient-to-r from-primary-600 to-primary-500' :
+                'text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-blue-100 dark:hover:bg-slate-800'
+              }
+            `}
+          >
+            <Camera className="h-5 w-5" /> <span>Photos</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('experiences')}
+            className={`flex-1 flex items-center justify-center space-x-2 px-5 py-3 text-sm font-medium transition-all
+              ${activeTab === 'experiences' ?
+                'text-white bg-gradient-to-r from-primary-600 to-primary-500' :
+                'text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-blue-100 dark:hover:bg-slate-800'
+              }
+            `}
+          >
+            <Pen className="h-5 w-5" /> <span>Experiences</span>
+          </button>
+        </div>
+
+        {activeTab === 'photos' ? (
+          <WalkPhotos
+            photos={walk.walkPhotos || []}
+            onEditPhoto={handleEditWalkPhoto}
+            onDeletePhoto={handleDeleteWalkPhoto}
+            onAddPhoto={() => {
               if (!user) {
                 toast('Please login to share memories', { icon: 'ℹ️' })
                 navigate('/login')
@@ -513,47 +665,14 @@ const WalkDetail = () => {
               }
               setIsAddPhotoModalOpen(true)
             }}
-            className="btn-primary py-2.5 px-4 text-sm inline-flex items-center space-x-2 self-start sm:self-auto"
-          >
-            <Camera className="w-4 h-4" />
-            <span>Add Memory</span>
-          </button>
-        </div>
-
-        {walk.walkPhotos && walk.walkPhotos.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {walk.walkPhotos.map((photo) => (
-              <WalkPhotoCard key={photo._id} photo={photo} />
-            ))}
-          </div>
+          />
         ) : (
-          <div className="glass-card p-12 text-center rounded-2xl space-y-4">
-            <div className="w-16 h-16 rounded-full bg-primary-50 dark:bg-primary-900/30 text-primary-500 flex items-center justify-center mx-auto">
-              <Camera className="w-8 h-8" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="font-bold text-lg text-slate-800 dark:text-white">
-                No memories shared yet
-              </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                Were you part of this walk? Be the first to share your favorite bird sighting or reflection!
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                if (!user) {
-                  toast('Please login to share memories', { icon: 'ℹ️' })
-                  navigate('/login')
-                  return
-                }
-                setIsAddPhotoModalOpen(true)
-              }}
-              className="btn-primary text-sm px-6 py-2.5 inline-flex items-center space-x-2"
-            >
-              <Camera className="w-4 h-4" />
-              <span>Share Experience</span>
-            </button>
-          </div>
+          <WalkExperiences
+            experiences={walk.walkExperiences || []}
+            onAddExperience={handleAddWalkExperience}
+            onEditExperience={handleEditWalkExperience}
+            onDeleteExperience={handleDeleteWalkExperience}
+          />
         )}
       </section>
 

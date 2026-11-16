@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { X, MapPin, CalendarDays, Clock, Info } from 'lucide-react'
 import toast from 'react-hot-toast'
 import BirdSightingsMap from './BirdSightingsMap'
-import type { BirdSighting, SightingFormData } from '../interfaces/BirdSighting'
+import type { BirdSighting, SightingFormData } from '../../interfaces/BirdSighting'
 
 export interface AddBirdSightingModalProps {
   onClose: () => void

@@ -2,8 +2,8 @@ import React, { useState } from 'react'
 import { X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { SightingFields } from './AddBirdSightingModal'
-import type { BirdPhoto } from '../interfaces/BirdPhoto'
-import type { SightingFormData } from '../interfaces/BirdSighting'
+import type { BirdPhoto } from '../../interfaces/BirdPhoto'
+import type { SightingFormData } from '../../interfaces/BirdSighting'
 
 interface EditBirdPhotoModalProps {
   photo: BirdPhoto

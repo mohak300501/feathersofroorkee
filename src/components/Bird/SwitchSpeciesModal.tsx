@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Bird } from 'lucide-react'
-import { BirdPhoto } from '../interfaces/BirdPhoto'
+import { BirdPhoto } from '../../interfaces/BirdPhoto'
 
 interface SwitchSpeciesModalProps {
   photo: BirdPhoto

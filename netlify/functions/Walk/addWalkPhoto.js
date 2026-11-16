@@ -25,7 +25,7 @@ exports.handler = async (event, context) => {
     } catch {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON payload' }) };
     }
-    const { walkId, experience, fileData, fileName, contentType, userId } = requestData;
+    const { walkId, info, experience, fileData, fileName, contentType, userId } = requestData;
 
     if (!walkId || !fileData || !userId) {
       return {
@@ -68,12 +68,15 @@ exports.handler = async (event, context) => {
     const driveFileId = await uploadFileToDrive(fileData, fileName, contentType, folderId);
     const { imagekitFileId, imagekitFilePath } = await uploadFileToImageKit(fileData, fileName, 'walks');
 
+    const photoInfo = (typeof info === 'string' ? info : experience) || '';
+
     const result = await db.collection('walkPhotos').insertOne({
       walkId: walk._id.toString(),
       driveFileId,
       imagekitFileId,
       imagekitFilePath,
-      experience: experience || '',
+      info: photoInfo,
+      experience: photoInfo,
       userId,
       addedAt: new Date()
     });

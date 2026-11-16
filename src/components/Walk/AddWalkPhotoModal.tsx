@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { X, Upload, Camera, MessageSquare, Image as ImageIcon } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
-import { compressImage, readFileAsBase64, parseApiResponse, isSizeLimitError } from '../utils/imageCompressor'
+import { useAuth } from '../../contexts/AuthContext'
+import { compressImage, readFileAsBase64, parseApiResponse, isSizeLimitError } from '../../utils/imageCompressor'
 import toast from 'react-hot-toast'
 
 interface AddWalkPhotoModalProps {
@@ -12,7 +12,7 @@ interface AddWalkPhotoModalProps {
 
 const AddWalkPhotoModal = ({ walkId, onClose, onSuccess }: AddWalkPhotoModalProps) => {
   const { user } = useAuth()
-  const [experience, setExperience] = useState('')
+  const [info, setInfo] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [compress, setCompress] = useState(false)
@@ -59,7 +59,8 @@ const AddWalkPhotoModal = ({ walkId, onClose, onSuccess }: AddWalkPhotoModalProp
 
       const payload = {
         walkId,
-        experience,
+        info: info.trim(),
+        experience: info.trim(),
         fileData,
         fileName,
         contentType,
@@ -72,7 +73,7 @@ const AddWalkPhotoModal = ({ walkId, onClose, onSuccess }: AddWalkPhotoModalProp
         body: JSON.stringify(payload)
       })
 
-      const data = await parseApiResponse(response)
+      const data = await parseApiResponse<{ success?: boolean; error?: string }>(response)
       if (data && data.success) {
         onSuccess()
       } else {
@@ -163,11 +164,11 @@ const AddWalkPhotoModal = ({ walkId, onClose, onSuccess }: AddWalkPhotoModalProp
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                <MessageSquare className="w-4 h-4" /> Share a few words about this memory
+                <MessageSquare className="w-4 h-4" /> Tell us about your experience
               </label>
               <textarea
-                value={experience}
-                onChange={(e) => setExperience(e.target.value)}
+                value={info}
+                onChange={(e) => setInfo(e.target.value)}
                 className="input-field resize-none h-32"
                 placeholder="Had a great time spotting birds..."
               />

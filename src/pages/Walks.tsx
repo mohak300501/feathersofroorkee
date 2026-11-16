@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import WalkCard from '../components/WalkCard'
-import LoadingSpinner from '../components/LoadingSpinner'
+import WalkCard from '../components/Walk/WalkCard'
+import LoadingSpinner from '../components/General/LoadingSpinner'
 import { Plus, Leaf, Users, Heart, Handshake } from 'lucide-react'
-import AddWalkModal from '../components/AddWalkModal'
+import AddWalkModal from '../components/Walk/AddWalkModal'
 import type { Walk } from '../interfaces/Walk'
 import toast from 'react-hot-toast'
 

@@ -14,12 +14,19 @@ exports.handler = async (event, context) => {
 
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
-  } 
+  }
 
   try {
-    const { username } = JSON.parse(event.body);
+    let requestData;
+    try {
+      requestData = JSON.parse(event.body || '{}');
+    } catch {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON payload' }) };
+    }
 
-    if (typeof username !== 'string' || !username) {
+    const { username } = requestData;
+
+    if (typeof username !== 'string' || username.trim().length < 3) {
       return {
         statusCode: 400,
         headers,
@@ -28,7 +35,7 @@ exports.handler = async (event, context) => {
     }
 
     const db = await connectToDatabase(context);
-    
+
     const existingUser = await db.collection('users').findOne(createUsernameFilter(username));
 
     if (existingUser) {

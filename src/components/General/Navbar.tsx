@@ -1,9 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import { useTheme } from '../contexts/ThemeContext'
+import { useAuth } from '../../contexts/AuthContext'
+import { useTheme } from '../../contexts/ThemeContext'
 import {
   Bird, Fish, Leaf, LogIn, UserPlus, User, Settings, LogOut, Menu, X, Sun, Moon, Trophy,
-  ListChecks, Binoculars, ScrollText, ChevronDown, Footprints
+  ListChecks, Binoculars, ScrollText, ChevronDown, Footprints, ChartPie
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -25,7 +25,7 @@ const Navbar = () => {
     { to: '/projects', label: 'Projects', icon: ScrollText },
     { to: '/events', label: 'Events', icon: ScrollText },
     // { to: '/poems', label: 'Poems', icon: ScrollText },
-    { to: '/stats', label: 'Stats', icon: ScrollText }
+    { to: '/stats', label: 'Stats', icon: ChartPie }
   ]
 
   const isMoreActive = moreItems.some(item => location.pathname === item.to)

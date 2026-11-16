@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { X, Upload, Calendar, MapPin, AlignLeft, Users, Image as ImageIcon } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
-import { compressImage, readFileAsBase64, parseApiResponse, isSizeLimitError } from '../utils/imageCompressor'
+import { useAuth } from '../../contexts/AuthContext'
+import { compressImage, readFileAsBase64, parseApiResponse, isSizeLimitError } from '../../utils/imageCompressor'
 import toast from 'react-hot-toast'
 
 interface AddWalkModalProps {
@@ -87,11 +87,11 @@ const AddWalkModal = ({ onClose, onSuccess }: AddWalkModalProps) => {
         body: JSON.stringify(payload)
       })
 
-      const data = await parseApiResponse(response)
+      const data = await parseApiResponse<{ success?: boolean; error?: string }>(response)
       if (data && data.success) {
         onSuccess()
       } else {
-        setError(data?.error ? data.error.message : 'Failed to create walk')
+        setError(data?.error || 'Failed to create walk')
       }
     } catch (err: unknown) {
       console.error(err)

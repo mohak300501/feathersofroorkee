@@ -9,15 +9,15 @@ const Login = () => {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
+  const { login, googleSignIn } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!identifier || !password) {
-      toast.error('Please fill in all fields')
-      return
+      toast.error('Please fill in all fields');
+      return;
     }
 
     setLoading(true)
@@ -26,48 +26,62 @@ const Login = () => {
 
       // Check if identifier is not an email
       if (!identifier.includes('@')) {
-        let response: Response
-        let data: { email?: string; error?: string }
+        let response: Response;
+        let data: { email?: string; error?: string };
         try {
           response = await fetch('/api/General/getEmailByUsername', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: identifier })
-          })
-          data = await response.json()
+          });
+          data = await response.json();
         } catch (error) {
-          console.error('Username lookup error:', error)
-          toast.error('Unable to look up username. Please try again.')
-          return
-        }
-
-        if (response.status === 404) {
-          toast.error('User not found');
+          console.error('Username lookup error:', error);
+          toast.error('Unable to look up username. Please try again.');
           return;
         }
 
-        if (!response.ok) {
-          console.error('Username lookup failed:', data.error || response.statusText)
-          toast.error('Unable to look up username. Please try again.')
-          return
+        if (response.status === 404) {
+          toast.error('Username not found. Please check your username.');
+          return;
         }
+
+        if (!response.ok) throw new Error(data.error || `Username lookup failed (HTTP ${response.status}).`);
 
         if (!data.email) {
-          toast.error('No email address is associated with this username.')
-          return
+          toast.error('No email address is associated with this username.');
+          return;
         }
 
-        loginEmail = data.email
+        loginEmail = data.email;
       }
 
-      await login(loginEmail, password)
-      navigate('/')
+      await login(loginEmail, password);
+      navigate('/');
     } catch (error) {
-      console.error('Login error:', error)
+      console.error('Login error:', error);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error('Failed to log in. Please try again.');
+      }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+
+    try {
+      await googleSignIn();
+      navigate('/');
+    } catch (error) {
+      console.error('Google login error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-transparent">
@@ -80,7 +94,7 @@ const Login = () => {
             Welcome back
           </h2>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Sign in to your account to continue
+            Log in to your account to continue
           </p>
         </div>
 
@@ -158,6 +172,28 @@ const Login = () => {
             </div>
           </form>
 
+          {/* Google Sign In */}
+          <div className="mt-6">
+            <div className="relative flex items-center">
+              <div className="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
+              <span className="flex-shrink mx-4 text-sm text-slate-500 dark:text-slate-400">
+                OR
+              </span>
+              <div className="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="mt-6 w-full flex justify-center items-center gap-3 py-3 px-4 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-white font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+            >
+              <img className="w-5 h-5" src="/google.svg" />
+
+              <span>Continue with Google</span>
+            </button>
+          </div>
+
           <div className="mt-6 text-center">
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Don't have an account?{' '}
@@ -172,4 +208,4 @@ const Login = () => {
   )
 }
 
-export default Login 
+export default Login;

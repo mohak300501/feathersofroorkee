@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import LoadingSpinner from '../components/LoadingSpinner'
+import LoadingSpinner from '../components/General/LoadingSpinner'
 import { Plus, Trash2, Settings, Edit2, X, FolderTree, Users } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { userTypes, type UserType } from '../utils/userTypes'
