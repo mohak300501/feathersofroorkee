@@ -1,11 +1,12 @@
 const { connectToDatabase } = require('../General/db');
 const { ObjectId } = require('mongodb');
 const google = require('googleapis');
+const { getAuthenticatedUserId } = require('../firebaseAdmin');
 
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   };
 
@@ -28,10 +29,15 @@ exports.handler = async (event, context) => {
       };
     }
 
+    const authenticatedUserId = await getAuthenticatedUserId(event);
+    if (!authenticatedUserId || authenticatedUserId !== userId) {
+      return { statusCode: 401, headers, body: JSON.stringify({ error: 'Authentication required' }) };
+    }
+
     const db = await connectToDatabase(context);
 
     // Check if user is admin
-    const userDoc = await db.collection('users').findOne({ uid: userId });
+    const userDoc = await db.collection('users').findOne({ uid: authenticatedUserId });
     if (!userDoc || userDoc.userType !== 0) {
       return {
         statusCode: 403,

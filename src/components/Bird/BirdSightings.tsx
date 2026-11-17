@@ -17,15 +17,25 @@ const BirdSightings = ({ sightings, user, isAdmin, onAddSighting, onCoordinateCl
   const sorted = [...filteredSightings].sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime())
 
   return (
-    <section className="space-y-6">
-      {user && (
-        <div className="flex justify-end">
-          <button onClick={onAddSighting} className="btn-primary inline-flex items-center gap-2 shadow-xl hover:-translate-y-1">
-            <Plus className="h-5 w-5" />
-            Add a Sighting
-          </button>
+    <section className="space-y-6 pt-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white">
+            Bird Sightings
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Sightings shared by the citizens of Roorkee.
+          </p>
         </div>
-      )}
+        {user && (
+          <div className="flex justify-end">
+            <button onClick={onAddSighting} className="btn-primary inline-flex items-center gap-2 shadow-xl hover:-translate-y-1">
+              <Plus className="h-5 w-5" />
+              Add a Sighting
+            </button>
+          </div>
+        )}
+      </div>
 
       <div className="glass-card overflow-hidden">
         <div className="overflow-x-auto">

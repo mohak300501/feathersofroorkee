@@ -2,11 +2,12 @@ const { connectToDatabase } = require('../General/db');
 const { deleteFileFromImageKit } = require('../General/imageKitAPI');
 const { deleteFileFromDrive } = require('../General/driveAPI');
 const { ObjectId } = require('mongodb');
+const { getAuthenticatedUserId } = require('../firebaseAdmin');
 
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   };
 
@@ -29,10 +30,15 @@ exports.handler = async (event, context) => {
       };
     }
 
+    const authenticatedUserId = await getAuthenticatedUserId(event);
+    if (!authenticatedUserId || authenticatedUserId !== userId) {
+      return { statusCode: 401, headers, body: JSON.stringify({ error: 'Authentication required' }) };
+    }
+
     const db = await connectToDatabase(context);
 
     // Check if user exists and get permissions
-    const userDoc = await db.collection('users').findOne({ uid: userId });
+    const userDoc = await db.collection('users').findOne({ uid: authenticatedUserId });
     if (!userDoc) {
       return {
         statusCode: 404,
@@ -55,7 +61,7 @@ exports.handler = async (event, context) => {
     }
 
     // Check permissions
-    if (photoDoc.userId !== userId && userDoc.userType !== 0) {
+    if (photoDoc.userId !== authenticatedUserId && userDoc.userType !== 0) {
       return {
         statusCode: 403,
         headers,

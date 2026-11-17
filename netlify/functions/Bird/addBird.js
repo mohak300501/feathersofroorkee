@@ -1,6 +1,8 @@
 const { connectToDatabase } = require('../General/db');
 const { generateUniqueCommonCode } = require('../General/commonCode');
 
+const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -27,6 +29,16 @@ exports.handler = async (event, context) => {
       };
     }
 
+    const normalizedCommonName = commonName.trim();
+    const normalizedScientificName = scientificName.trim();
+    if (!normalizedCommonName || !normalizedScientificName) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Common name and scientific name are required' }),
+      };
+    }
+
     const db = await connectToDatabase(context);
 
     // Check if user is admin
@@ -47,16 +59,19 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Check if bird already exists (case-insensitive)
+    // Do not create another record if either species name is already in use.
     const existingBird = await db.collection('birds').findOne({
-      commonName: { $regex: new RegExp(`^${commonName}$`, 'i') }
+      $or: [
+        { commonName: { $regex: new RegExp(`^${escapeRegex(normalizedCommonName)}$`, 'i') } },
+        { scientificName: { $regex: new RegExp(`^${escapeRegex(normalizedScientificName)}$`, 'i') } },
+      ],
     });
 
     if (existingBird) {
       return {
         statusCode: 409,
         headers,
-        body: JSON.stringify({ error: 'Bird with this common name already exists' }),
+        body: JSON.stringify({ error: 'Bird with this common name or scientific name already exists' }),
       };
     }
 
@@ -65,12 +80,12 @@ exports.handler = async (event, context) => {
     const existingCodes = allBirds.map(b => b.commonCode).filter(Boolean);
 
     // Generate unique commonCode
-    const commonCode = generateUniqueCommonCode(commonName, existingCodes);
+    const commonCode = generateUniqueCommonCode(normalizedCommonName, existingCodes);
 
     // Add bird to MongoDB
     const birdResult = await db.collection('birds').insertOne({
-      commonName: commonName.trim(),
-      scientificName: scientificName.trim(),
+      commonName: normalizedCommonName,
+      scientificName: normalizedScientificName,
       familyId: familyId,
       commonCode: commonCode,
       photoCount: 0,

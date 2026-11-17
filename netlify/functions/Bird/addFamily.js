@@ -1,5 +1,7 @@
 const { connectToDatabase } = require('../General/db');
 
+const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -39,8 +41,9 @@ exports.handler = async (event, context) => {
     }
 
     // Check if family already exists
+    const normalizedFamilyName = familyName.trim();
     const existingFamily = await db.collection('families').findOne({
-      familyName: { $regex: new RegExp(`^${familyName.trim()}$`, 'i') }
+      familyName: { $regex: new RegExp(`^${escapeRegex(normalizedFamilyName)}$`, 'i') }
     });
 
     if (existingFamily) {

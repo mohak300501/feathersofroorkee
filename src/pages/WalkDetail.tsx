@@ -122,11 +122,46 @@ const WalkDetail = () => {
       },
       body: JSON.stringify({ walkId: walk._id, userId: user.uid, info })
     })
-    const result = await parseApiResponse<{ info: WalkExperience }>(response)
-    setWalk((current) => current
-      ? { ...current, walkExperiences: [result.info, ...current.walkExperiences] }
-      : current)
-    toast.success('Experience shared successfully')
+    const result = await parseApiResponse<{ success?: boolean; experience?: WalkExperience }>(response)
+    if (!result.success) {
+      throw new Error('The server did not confirm the saved experience.')
+    }
+
+    const newExperience = result.experience
+    if (newExperience?.id && newExperience.addedAt) {
+      setWalk((current) => current
+        ? {
+          ...current,
+          walkExperiences: [
+            newExperience,
+            ...(current.walkExperiences ?? []).filter((item) => item.id !== newExperience.id)
+          ]
+        }
+        : current)
+      toast.success('Experience shared successfully')
+      return
+    }
+
+    try {
+      const query = new URLSearchParams({ walkCode: walk.walkCode })
+      const refreshResponse = await fetch(`/api/Walk/getWalk?${query}`)
+      if (!refreshResponse.ok) {
+        throw new Error(`Failed to refresh walk experiences (${refreshResponse.status})`)
+      }
+
+      const refreshedWalk = await refreshResponse.json() as { walkExperiences?: WalkExperience[] }
+      const refreshedExperiences = refreshedWalk.walkExperiences
+      if (!Array.isArray(refreshedExperiences)) {
+        throw new Error('The refreshed walk response did not contain experiences.')
+      }
+      setWalk((current) => current
+        ? { ...current, walkExperiences: refreshedExperiences }
+        : current)
+      toast.success('Experience shared successfully')
+    } catch (refreshError: unknown) {
+      console.error('Experience was saved, but the list could not be refreshed:', refreshError)
+      toast.error('Experience was shared, but the list could not be refreshed. Reload the page to view it.')
+    }
   }
 
   const handleEditWalkExperience = async (experienceId: string, info: string) => {
@@ -156,10 +191,7 @@ const WalkDetail = () => {
     const token = await user.getIdToken()
     const response = await fetch('/api/Walk/editWalkPhoto', {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ photoId, userId: user.uid, info })
     })
     await parseApiResponse(response)
@@ -170,8 +202,9 @@ const WalkDetail = () => {
           photo._id === photoId ? { ...photo, info } : photo)
       }
       : current)
-    toast.success('Photo info updated')
+    toast.success('Photo info updated successfully')
   }
+
   const handleDeleteWalkPhoto = async (photoId: string) => {
     if (!walk || !user) return
 
@@ -301,9 +334,10 @@ const WalkDetail = () => {
 
     setIsDeleting(true)
     try {
+      const token = await user.getIdToken()
       const response = await fetch('/api/Walk/deleteWalk', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ walkId: walk._id, userId: user.uid })
       })
 
@@ -479,7 +513,7 @@ const WalkDetail = () => {
                         href={walk.mapPin}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-1 mt-0.5 font-medium"
+                        className="text-sm text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-1 mt-0.5 font-medium"
                       >
                         <span>View on Google Maps</span>
                         <ExternalLink className="w-3 h-3" />
@@ -655,16 +689,10 @@ const WalkDetail = () => {
         {activeTab === 'photos' ? (
           <WalkPhotos
             photos={walk.walkPhotos || []}
+            user={user}
             onEditPhoto={handleEditWalkPhoto}
             onDeletePhoto={handleDeleteWalkPhoto}
-            onAddPhoto={() => {
-              if (!user) {
-                toast('Please login to share memories', { icon: 'ℹ️' })
-                navigate('/login')
-                return
-              }
-              setIsAddPhotoModalOpen(true)
-            }}
+            onAddPhoto={() => { setIsAddPhotoModalOpen(true) }}
           />
         ) : (
           <WalkExperiences

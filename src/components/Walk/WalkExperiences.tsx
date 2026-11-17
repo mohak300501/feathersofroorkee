@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Calendar, Edit2, Trash2, Pen, Quote } from 'lucide-react'
+import { User, Calendar, Edit2, Trash2, Pen, Quote } from 'lucide-react'
 import { format } from 'date-fns'
 import { useAuth } from '../../contexts/AuthContext'
 import type { WalkExperience } from '../../interfaces/Walk'
@@ -42,18 +42,20 @@ const WalkExperiences = ({ experiences, onAddExperience, onEditExperience, onDel
             Reflections shared by participants from this birdwalk.
           </p>
         </div>
-        <button
-          onClick={handleAddExperience}
-          className="btn-primary py-2.5 px-4 text-sm inline-flex items-center gap-2 self-start sm:self-auto"
-        >
-          <Pen className="w-4 h-4" />
-          <span>Share Your Experience</span>
-        </button>
+        {user && (
+          <button
+            onClick={handleAddExperience}
+            className="btn-primary py-2.5 px-4 text-sm inline-flex items-center gap-2 self-start sm:self-auto"
+          >
+            <Pen className="w-4 h-4" />
+            <span>Share Your Experience</span>
+          </button>
+        )}
       </div>
 
       {experiences.length > 0 ? (
         <div className="space-y-4">
-          {experiences.map((experience) => {
+          {experiences.filter(Boolean).map((experience) => {
             const date = new Date(experience.addedAt)
             const hasValidDate = !Number.isNaN(date.getTime())
 
@@ -69,8 +71,8 @@ const WalkExperiences = ({ experiences, onAddExperience, onEditExperience, onDel
                   </p>
                   <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 text-sm text-slate-500 dark:text-slate-400">
                     <span className="inline-flex items-center gap-2 font-medium text-primary-600 dark:text-primary-400">
-                      <Pen className="w-4 h-4" />
-                      @{experience.username}
+                      <User className="w-4 h-4 shrink-0 text-slate-400" />
+                      <span className="text-primary-600 dark:text-primary-400">@{experience.username}</span>
                     </span>
                     {hasValidDate && (
                       <time

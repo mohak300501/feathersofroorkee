@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { X } from 'lucide-react'
 
 interface WalkExperienceModalProps {
@@ -19,15 +19,18 @@ const WalkExperienceModal = ({
   const [info, setInfo] = useState(initialInfo)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const submissionInProgress = useRef(false)
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
+    if (submissionInProgress.current) return
     const trimmedInfo = info.trim()
     if (!trimmedInfo) {
       setError('Please write an experience before submitting.')
       return
     }
 
+    submissionInProgress.current = true
     setLoading(true)
     setError('')
     try {
@@ -36,6 +39,7 @@ const WalkExperienceModal = ({
     } catch (submitError: unknown) {
       setError(submitError instanceof Error ? submitError.message : 'Failed to save experience.')
     } finally {
+      submissionInProgress.current = false
       setLoading(false)
     }
   }

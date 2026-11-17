@@ -70,7 +70,7 @@ const BirdPhotoCard = ({
     }
   }
 
-  const imgSrc = imagekitFilePath
+  const imageUrl = imagekitFilePath
     ? `${import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT}${imagekitFilePath}?tr=w-800,f-auto,q-auto`
     : `https://drive.google.com/thumbnail?id=${driveFileId}&sz=w800`
 
@@ -80,22 +80,25 @@ const BirdPhotoCard = ({
 
   return (
     <>
-      <div className="photo-card cursor-pointer" onClick={() => setShowFullImage(true)}>
-        <div className="relative group">
-          <img
-            src={imgSrc}
-            alt={`Bird photo taken at ${sighting?.location}`}
-            className="w-full h-64 object-cover cursor-pointer"
-            onClick={() => setShowFullImage(true)}
-
-            onError={() => {
-              console.error('Image failed to load:', imgSrc);
-            }}
-          />
+      <div className="photo-card flex flex-col cursor-pointer" onClick={() => setShowFullImage(true)}>
+        <div className="relative group overflow-hidden">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={`Bird photo taken at ${sighting?.location}`}
+              className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105 cursor-pointer"
+              onClick={() => setShowFullImage(true)}
+              onError={(e) => { console.error('Image failed to load:', imageUrl, '. ', e); }}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-400">
+              No image
+            </div>
+          )}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
             <button
               onClick={() => setShowFullImage(true)}
-              className="opacity-0 group-hover:opacity-100 bg-white/90 p-2.5 rounded-full transition-all duration-300 hover:bg-white shadow-lg"
+              className="opacity-0 group-hover:opacity-100 bg-white/80 p-2.5 rounded-full transition-all duration-300 hover:bg-white shadow-lg"
             >
               <Eye className="h-5 w-5 text-slate-700" />
             </button>

@@ -51,6 +51,8 @@ const EditWalkModal = ({ walk, onClose, onSuccess }: EditWalkModalProps) => {
     setError('')
 
     try {
+      if (!user) throw new Error('Please login to edit this walk.')
+      const token = await user.getIdToken()
       const payload = {
         walkId: walk._id,
         title,
@@ -65,7 +67,8 @@ const EditWalkModal = ({ walk, onClose, onSuccess }: EditWalkModalProps) => {
       const response = await fetch('/api/Walk/editWalk', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       })

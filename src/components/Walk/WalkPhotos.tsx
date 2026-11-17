@@ -4,12 +4,13 @@ import WalkPhotoCard from './WalkPhotoCard'
 
 interface WalkPhotosProps {
   photos: WalkPhoto[]
+  user: any
   onAddPhoto: () => void
   onEditPhoto: (photoId: string, info: string) => Promise<void>
   onDeletePhoto: (photoId: string) => Promise<void>
 }
 
-const WalkPhotos = ({ photos, onAddPhoto, onEditPhoto, onDeletePhoto }: WalkPhotosProps) => (
+const WalkPhotos = ({ photos, user, onAddPhoto, onEditPhoto, onDeletePhoto }: WalkPhotosProps) => (
   <section className="space-y-6 pt-6">
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
@@ -20,14 +21,15 @@ const WalkPhotos = ({ photos, onAddPhoto, onEditPhoto, onDeletePhoto }: WalkPhot
           Photos and memories shared by participants from this birdwalk.
         </p>
       </div>
-
-      <button
-        onClick={onAddPhoto}
-        className="btn-primary py-2.5 px-4 text-sm inline-flex items-center space-x-2 self-start sm:self-auto"
-      >
-        <Camera className="w-4 h-4" />
-        <span>Add a Photo</span>
-      </button>
+      {user && (
+        <button
+          onClick={onAddPhoto}
+          className="btn-primary py-2.5 px-4 text-sm inline-flex items-center space-x-2 self-start sm:self-auto"
+        >
+          <Camera className="w-4 h-4" />
+          <span>Add a Photo</span>
+        </button>
+      )}
     </div>
 
     {photos.length > 0 ? (

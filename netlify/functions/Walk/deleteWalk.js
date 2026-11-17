@@ -1,6 +1,7 @@
 const { connectToDatabase } = require('../General/db');
 const { deleteFileFromImageKit } = require('../General/imageKitAPI');
 const { ObjectId } = require('mongodb');
+const { getAuthenticatedUserId } = require('../firebaseAdmin');
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -42,10 +43,15 @@ exports.handler = async (event, context) => {
       };
     }
 
+    const authenticatedUserId = await getAuthenticatedUserId(event);
+    if (!authenticatedUserId || authenticatedUserId !== userId) {
+      return { statusCode: 401, headers, body: JSON.stringify({ error: 'Authentication required' }) };
+    }
+
     const db = await connectToDatabase(context);
 
     // Verify user is strictly admin
-    const user = await db.collection('users').findOne({ uid: userId });
+    const user = await db.collection('users').findOne({ uid: authenticatedUserId });
     if (!user || user.userType !== 0) {
       return {
         statusCode: 403,

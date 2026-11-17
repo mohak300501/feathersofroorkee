@@ -56,7 +56,7 @@ exports.handler = async (event, context) => {
       headers,
       body: JSON.stringify({
         success: true,
-        info: {
+        experience: {
           id: result.insertedId.toString(),
           userId: authenticatedUserId,
           walkId: walk._id.toString(),

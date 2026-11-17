@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Quote, User, Calendar, Edit3, Trash2 } from 'lucide-react'
+import { Quote, User, Calendar, Eye, Edit3, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import type { WalkPhoto } from '../../interfaces/Walk'
 import { useAuth } from '../../contexts/AuthContext'
@@ -25,29 +25,31 @@ const WalkPhotoCard = ({ photo, onEditPhoto, onDeletePhoto }: WalkPhotoCardProps
 
   return (
     <>
-      <div
-        className="glass-card group flex flex-col h-full overflow-hidden hover:-translate-y-1 transition-transform duration-300 cursor-pointer"
-        onClick={() => setIsModalOpen(true)}
-      >
-        <div className="relative aspect-[4/3] bg-slate-200 dark:bg-slate-700 overflow-hidden">
+      <div className="photo-card flex flex-col cursor-pointer" onClick={() => setIsModalOpen(true)}>
+        <div className="relative group aspect-[4/3] bg-slate-200 dark:bg-slate-700 overflow-hidden">
           {imageUrl ? (
             <img
               src={imageUrl}
               alt="Walk Photo"
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              onError={(e) => {
-                if (photo.driveFileId) {
-                  (e.target as HTMLImageElement).src = `https://drive.google.com/thumbnail?id=${photo.driveFileId}&sz=w800`
-                }
-              }}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              onClick={() => setIsModalOpen(true)}
+              onError={(e) => { console.error('Image failed to load:', imageUrl, '. ', e); }}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-400">
               No image
             </div>
           )}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="opacity-0 group-hover:opacity-100 bg-white/80 p-2.5 rounded-full transition-all duration-300 hover:bg-white shadow-lg"
+            >
+              <Eye className="h-5 w-5 text-slate-700" />
+            </button>
+          </div>
           {canEdit && (
-            <div className="absolute top-3 right-3 flex items-center gap-2">
+            <div className="absolute top-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
               <button
                 type="button"
                 onClick={(event) => {

@@ -20,15 +20,25 @@ const BirdPhotos = ({ photos, sightings, user, onAddPhoto, onDelete, onSetFeatur
   const sightingByPhotoId = new Map(sightings.filter(s => s.photoId).map(s => [s.photoId, s]))
 
   return (
-    <section className="space-y-8">
-      {user && (
-        <div className="text-center">
-          <button onClick={onAddPhoto} className="btn-primary inline-flex items-center space-x-2 shadow-xl hover:-translate-y-1">
-            <Upload className="h-5 w-5" />
-            <span>Add a Photo</span>
-          </button>
+    <section className="space-y-6 pt-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white">
+            Bird Photos
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Photos shared by the citizens of Roorkee.
+          </p>
         </div>
-      )}
+        {user && (
+          <div className="text-center">
+            <button onClick={onAddPhoto} className="btn-primary inline-flex items-center space-x-2 shadow-xl hover:-translate-y-1">
+              <Upload className="h-5 w-5" />
+              <span>Add a Photo</span>
+            </button>
+          </div>
+        )}
+      </div>
 
       {photos.length === 0 ? (
         <div className="glass-card text-center py-16 max-w-lg mx-auto">

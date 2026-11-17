@@ -88,9 +88,11 @@ const BirdDetail = () => {
   const handleEditBird = async (birdId: string, commonName: string, scientificName: string, familyId: string, iucnStatus: string, isMigratory: boolean, info: string) => {
     setEditing(true)
     try {
+      if (!user) throw new Error('Please login to edit this bird.')
+      const token = await user.getIdToken()
       const response = await fetch('/api/Bird/editBird', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ birdId, commonName, scientificName, familyId, userId: user?.uid, iucnStatus, isMigratory, info }),
       })
       if (!response.ok) {
@@ -114,9 +116,11 @@ const BirdDetail = () => {
     if (!bird) return
     if (!window.confirm(`Are you sure you want to delete "${bird.commonName}"? This will also delete all associated photos.`)) return
     try {
+      if (!user) throw new Error('Please login to delete this bird.')
+      const token = await user.getIdToken()
       const response = await fetch('/api/Bird/deleteBird', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ birdId: bird.id, userId: user?.uid }),
       })
       if (!response.ok) throw new Error('Failed to delete bird')
@@ -130,9 +134,11 @@ const BirdDetail = () => {
 
   const handlePhotoDelete = async (photoId: string) => {
     try {
+      if (!user || !bird) throw new Error('Please login to delete this photo.')
+      const token = await user.getIdToken()
       const response = await fetch('/api/Bird/deleteBirdPhoto', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ birdId: bird?.id, photoId, userId: user?.uid }),
       })
       if (!response.ok) throw new Error('Failed to delete photo')
@@ -147,9 +153,11 @@ const BirdDetail = () => {
 
   const handleSetFeatured = async (fileId: string) => {
     try {
+      if (!user || !bird) throw new Error('Please login to update the featured photo.')
+      const token = await user.getIdToken()
       const response = await fetch('/api/Bird/setFeaturedPhoto', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ birdId: bird?.id, fileId, userId: user?.uid }),
       })
       if (!response.ok) throw new Error('Failed to set featured photo')
@@ -163,10 +171,12 @@ const BirdDetail = () => {
 
   const handleEditPhotoSubmit = async (photoId: string, data: SightingFormData) => {
     try {
+      if (!user) throw new Error('Please login to edit this photo.')
+      const token = await user.getIdToken()
       const datetimeOfSighting = `${data.dateOfSighting}T${data.timeOfSighting}:00`
       const response = await fetch('/api/Bird/editBirdPhoto', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ photoId, userId: user?.uid, mapCoords: data.mapCoords, location: data.location, info: data.info, datetimeOfSighting }),
       })
       if (!response.ok) throw new Error('Failed to update photo')
@@ -187,10 +197,12 @@ const BirdDetail = () => {
 
   const handleEditSightingSubmit = async (sightingId: string, data: SightingFormData) => {
     try {
+      if (!user) throw new Error('Please login to edit this sighting.')
+      const token = await user.getIdToken()
       const datetimeOfSighting = `${data.dateOfSighting}T${data.timeOfSighting}:00`
       const response = await fetch('/api/Bird/editBirdSighting', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ sightingId, userId: user?.uid, mapCoords: data.mapCoords, location: data.location, info: data.info, datetimeOfSighting }),
       })
       if (!response.ok) throw new Error('Failed to update sighting')
@@ -212,9 +224,11 @@ const BirdDetail = () => {
   const handleDeleteSighting = async (sightingId: string) => {
     if (!window.confirm('Are you sure you want to delete this sighting?')) return
     try {
+      if (!user) throw new Error('Please login to delete this sighting.')
+      const token = await user.getIdToken()
       const response = await fetch('/api/Bird/deleteBirdSighting', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ sightingId, userId: user?.uid }),
       })
       if (!response.ok) throw new Error('Failed to delete sighting')
@@ -228,9 +242,11 @@ const BirdDetail = () => {
 
   const handleSwitchSpeciesSubmit = async (photoId: string, newBirdId: string) => {
     try {
+      if (!user || !bird) throw new Error('Please login to move this photo.')
+      const token = await user.getIdToken()
       const response = await fetch('/api/Bird/switchPhotoSpecies', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ photoId, userId: user?.uid, oldBirdId: bird?.id, newBirdId }),
       })
       if (!response.ok) throw new Error('Failed to switch species')
@@ -304,9 +320,10 @@ const BirdDetail = () => {
     if (!user || !bird || !data.mapCoords) return
     const datetimeOfSighting = `${data.dateOfSighting}T${data.timeOfSighting}:00`
     try {
+      const token = await user.getIdToken()
       const response = await fetch('/api/Bird/addBirdSighting', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           birdId: bird.id,
           userId: user.uid,
