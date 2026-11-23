@@ -15,53 +15,64 @@ const SignUp = () => {
   const { signup, googleSignIn } = useAuth()
   const navigate = useNavigate()
 
+  const checkUsernameAvailability = async (candidate: string): Promise<boolean> => {
+    if (candidate.includes('@')) {
+      toast.error('Username cannot contain the @ symbol.');
+      return false;
+    }
+    if (candidate.length < 3) {
+      toast.error('Please choose a username with at least 3 characters.');
+      return false;
+    }
+
+    try {
+      const response = await fetch('/api/General/checkUsername', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: candidate })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Unable to verify username availability.');
+      if (typeof data.available !== 'boolean') throw new Error('Invalid username verification response.');
+      if (!data.available) {
+        toast.error('Username is already taken.');
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Username availability error:', error);
+      toast.error(error instanceof Error ? error.message : 'Unable to verify username availability.');
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmedUsername = username.trim();
 
-    if (!username || !email || !password || !confirmPassword) {
+    if (!email || !password || !confirmPassword) {
       toast.error('Please fill in all fields');
       return;
     }
-
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
-
     if (password.length < 6) {
       toast.error('Password must be at least 6 characters long');
       return;
     }
 
-    if (username.trim().length < 3) {
-      toast.error('Username must be at least 3 characters long');
-      return;
-    }
-
     setLoading(true)
     try {
-      // Check if username is already taken
-      const trimmedUsername = username.trim();
-      const checkRes = await fetch('/api/General/checkUsername', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: trimmedUsername })
-      });
-
-      const checkData = await checkRes.json();
-      if (!checkRes.ok) throw new Error(checkData.error || 'Unable to verify username availability.');
-      if (typeof checkData.available !== 'boolean') {
-        throw new Error('Invalid response from username verification service.');
-      }
-      if (!checkData.available) {
-        toast.error('Username is already taken');
-        return;
-      }
-
+      const available = await checkUsernameAvailability(trimmedUsername);
+      if (!available) return;
       await signup(username, email, password);
-      navigate('/');
+      navigate('/login');
     } catch (error) {
-      console.error('Registration error:', error)
+      console.error('Sign up error:', error)
     } finally {
       setLoading(false);
     }
@@ -69,19 +80,17 @@ const SignUp = () => {
 
   const handleGoogleSignUp = async () => {
     const trimmedUsername = username.trim();
-
-    if (trimmedUsername.length < 3) {
-      toast.error('Please choose a username with at least 3 characters');
-      return;
-    }
-
     setLoading(true);
 
     try {
+      const available = await checkUsernameAvailability(trimmedUsername);
+      if (!available) return;
       await googleSignIn(trimmedUsername);
+      // Google signup keeps the user authenticated.
       navigate('/');
     } catch (error) {
-      console.error('Google registration error:', error);
+      console.error('Google sign up error:', error);
+      toast.error(error instanceof Error ? error.message : 'Google sign up failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -103,27 +112,50 @@ const SignUp = () => {
         </div>
 
         <div className="glass rounded-2xl p-8 shadow-xl">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Username
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  autoComplete="username"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="input-field pl-10"
-                  placeholder="Choose a username"
-                />
-              </div>
-            </div>
 
+          <div>
+            <label htmlFor="username" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Username
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                id="username"
+                name="username"
+                type="text"
+                autoComplete="username"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="input-field pl-10"
+                placeholder="Choose a username"
+              />
+            </div>
+          </div>
+
+          {/* Google Sign Up */}
+          <div className="mb-6">
+            <button
+              type="button"
+              onClick={handleGoogleSignUp}
+              disabled={loading}
+              className="mt-6 mb-6 w-full flex justify-center items-center gap-3 py-3 px-4 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-white font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+            >
+              <img className="w-5 h-5" src="/google.svg" />
+
+              <span>Sign up with Google</span>
+            </button>
+
+            <div className="relative flex items-center">
+              <div className="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
+              <span className="flex-shrink mx-4 text-sm text-slate-500 dark:text-slate-400">
+                OR
+              </span>
+              <div className="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
+            </div>
+          </div>
+
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Email Address
@@ -216,40 +248,19 @@ const SignUp = () => {
             </div>
           </form>
 
-          {/* Google Sign Up */}
-          <div className="mt-6">
-            <div className="relative flex items-center">
-              <div className="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
-              <span className="flex-shrink mx-4 text-sm text-slate-500 dark:text-slate-400">
-                OR
-              </span>
-              <div className="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleGoogleSignUp}
-              disabled={loading}
-              className="mt-6 w-full flex justify-center items-center gap-3 py-3 px-4 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-white font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-            >
-              <img className="w-5 h-5" src="/google.svg" />
-
-              <span>Sign up with Google</span>
-            </button>
-          </div>
-
           <div className="mt-6 text-center">
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Already have an account?{' '}
               <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">
                 Login here
-              </Link>
+              </Link>.
             </p>
           </div>
 
           <div className="mt-4 p-4 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100/50 dark:border-blue-900/30 rounded-xl">
             <p className="text-sm text-blue-800 dark:text-blue-300">
-              <strong>Note:</strong> After registration, please check your email and verify your account before signing in.
+              <strong>IMPORTANT:</strong> After registration, please check your inbox and verify your email address before logging in with your credentials.
+              You won't be able to login without verifying your email address.
             </p>
           </div>
         </div>

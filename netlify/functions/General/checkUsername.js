@@ -11,7 +11,6 @@ exports.handler = async (event, context) => {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
   }
-
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
@@ -25,39 +24,20 @@ exports.handler = async (event, context) => {
     }
 
     const { username } = requestData;
-
-    if (typeof username !== 'string' || username.trim().length < 3) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Missing username' }),
-      };
+    const validationError = createUsernameFilter.validateUsername(username);
+    if (validationError) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: validationError }) };
     }
 
     const db = await connectToDatabase(context);
-
     const existingUser = await db.collection('users').findOne(createUsernameFilter(username));
-
     if (existingUser) {
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ available: false }),
-      };
+      return { statusCode: 200, headers, body: JSON.stringify({ available: false }) };
     }
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ available: true }),
-    };
-
+    return { statusCode: 200, headers, body: JSON.stringify({ available: true }) };
   } catch (error) {
     console.error('Error checking username:', error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: 'Internal server error' }),
-    };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal server error' }) };
   }
 };

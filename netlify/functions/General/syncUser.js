@@ -1,5 +1,6 @@
 const { connectToDatabase } = require('./db');
 const { getAuthenticatedUserId } = require('../firebaseAdmin');
+const createUsernameFilter = require('./usernameFilter');
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -14,7 +15,7 @@ exports.handler = async (event, context) => {
   }
 
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
+    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed.' }) };
   }
 
   try {
@@ -23,23 +24,26 @@ exports.handler = async (event, context) => {
     try {
       requestData = JSON.parse(event.body || '{}');
     } catch {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON payload' }) };
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON payload.' }) };
     }
 
     const { uid, email, username } = requestData;
 
     // 2. Validate request fields.
     if (typeof uid !== 'string' || !uid.trim()) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing or invalid uid' }) };
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing or invalid uid.' }) };
     }
 
     if (typeof email !== 'string' || !email.trim()) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing or invalid email' }) };
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing or invalid email.' }) };
     }
 
     const hasUsername = username !== undefined;
-    if (hasUsername && (typeof username !== 'string' || username.trim().length < 3)) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Username must contain at least 3 characters' }) };
+    if (hasUsername) {
+      const validationError = createUsernameFilter.validateUsername(username);
+      if (validationError) {
+        return { statusCode: 400, headers, body: JSON.stringify({ error: validationError }) };
+      }
     }
 
     // 3. Verify Firebase authentication.
@@ -48,7 +52,7 @@ exports.handler = async (event, context) => {
       return { statusCode: 401, headers, body: JSON.stringify({ error: 'Authentication required' }) };
     }
     if (authenticatedUserId !== uid) {
-      return { statusCode: 403, headers, body: JSON.stringify({ error: 'You cannot synchronize another user account' }) };
+      return { statusCode: 403, headers, body: JSON.stringify({ error: 'You cannot synchronize another user account.' }) };
     }
 
     // 4. Connect to MongoDB.
@@ -58,17 +62,16 @@ exports.handler = async (event, context) => {
 
     // 5. A new user MUST supply an explicitly chosen username.
     if (!existingUser && !hasUsername) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Username is required when creating a new user account' }) };
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Username is required when creating a new user account.' }) };
     }
 
     const trimmedUsername = hasUsername ? username.trim() : undefined;
 
     // 6. Check username uniqueness.
     if (hasUsername) {
-      const createUsernameFilter = require('./usernameFilter');
       const duplicateUser = await users.findOne({ ...createUsernameFilter(trimmedUsername), uid: { $ne: uid } });
       if (duplicateUser) {
-        return { statusCode: 409, headers, body: JSON.stringify({ error: 'Username is already taken' }) };
+        return { statusCode: 409, headers, body: JSON.stringify({ error: 'Username is already taken.' }) };
       }
     }
 
@@ -89,7 +92,7 @@ exports.handler = async (event, context) => {
 
     // 8. Retrieve updated document.
     const userDoc = await users.findOne({ uid });
-    if (!userDoc) throw new Error('User document could not be retrieved after synchronization');
+    if (!userDoc) throw new Error('User document could not be retrieved after synchronization.');
     if (typeof userDoc.username !== 'string' || !userDoc.username.trim()) {
       throw new Error('User document does not contain a valid username');
     }
@@ -125,7 +128,7 @@ exports.handler = async (event, context) => {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        error: 'Failed to synchronize user with database',
+        error: 'Failed to synchronize user with database.',
         details: error.message
       })
     };

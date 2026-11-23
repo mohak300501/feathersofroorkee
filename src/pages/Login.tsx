@@ -9,6 +9,7 @@ const Login = () => {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [showVerificationLink, setShowVerificationLink] = useState(false)
   const { login, googleSignIn } = useAuth()
   const navigate = useNavigate()
 
@@ -45,9 +46,7 @@ const Login = () => {
           toast.error('Username not found. Please check your username.');
           return;
         }
-
         if (!response.ok) throw new Error(data.error || `Username lookup failed (HTTP ${response.status}).`);
-
         if (!data.email) {
           toast.error('No email address is associated with this username.');
           return;
@@ -60,10 +59,11 @@ const Login = () => {
       navigate('/');
     } catch (error) {
       console.error('Login error:', error);
-      if (error instanceof Error) {
-        toast.error(error.message);
+      if (error instanceof Error && error.name === 'EmailNotVerifiedError') {
+        toast.error('Your email address has not been verified. Please verify your email before logging in.');
+        setShowVerificationLink(true);
       } else {
-        toast.error('Failed to log in. Please try again.');
+        toast.error(error instanceof Error ? error.message : 'Failed to log in. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -78,6 +78,7 @@ const Login = () => {
       navigate('/');
     } catch (error) {
       console.error('Google login error:', error);
+      toast.error(error instanceof Error ? error.message : 'Google login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -99,6 +100,29 @@ const Login = () => {
         </div>
 
         <div className="glass rounded-2xl p-8 shadow-xl">
+
+          {/* Google Sign In */}
+          <div className="mb-6">
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="mb-6 w-full flex justify-center items-center gap-3 py-3 px-4 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-white font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+            >
+              <img className="w-5 h-5" src="/google.svg" />
+
+              <span>Continue with Google</span>
+            </button>
+
+            <div className="relative flex items-center">
+              <div className="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
+              <span className="flex-shrink mx-4 text-sm text-slate-500 dark:text-slate-400">
+                OR
+              </span>
+              <div className="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
+            </div>
+          </div>
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="identifier" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -145,12 +169,23 @@ const Login = () => {
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
+
               <div className="flex items-center justify-end mt-2">
-                <div className="text-sm">
-                  <Link to="/forgot-password" className="font-medium text-primary-600 hover:text-primary-500">
-                    Forgot your password?
+                <Link to="/forgot-password" className="text-sm font-medium text-primary-600 hover:text-primary-500">
+                  Forgot your password?
+                </Link>
+
+                {showVerificationLink && (
+                  <Link
+                    to="/verify-email"
+                    state={{
+                      email: identifier.includes('@') ? identifier : ''
+                    }}
+                    className="text-sm font-medium text-primary-600 hover:text-primary-500"
+                  >
+                    Resend verification link
                   </Link>
-                </div>
+                )}
               </div>
             </div>
 
@@ -172,34 +207,12 @@ const Login = () => {
             </div>
           </form>
 
-          {/* Google Sign In */}
-          <div className="mt-6">
-            <div className="relative flex items-center">
-              <div className="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
-              <span className="flex-shrink mx-4 text-sm text-slate-500 dark:text-slate-400">
-                OR
-              </span>
-              <div className="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleGoogleLogin}
-              disabled={loading}
-              className="mt-6 w-full flex justify-center items-center gap-3 py-3 px-4 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-white font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-            >
-              <img className="w-5 h-5" src="/google.svg" />
-
-              <span>Continue with Google</span>
-            </button>
-          </div>
-
           <div className="mt-6 text-center">
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Don't have an account?{' '}
               <Link to="/signup" className="font-medium text-primary-600 hover:text-primary-500">
                 Sign up here
-              </Link>
+              </Link>.
             </p>
           </div>
         </div>

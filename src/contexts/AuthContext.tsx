@@ -36,6 +36,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>
   signup: (username: string, email: string, password: string) => Promise<void>
   googleSignIn: (username?: string) => Promise<void>
+  resendVerificationEmail: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
   updateProfile: (newUsername: string, newWhatsapp: string, newOptionalInfo?: OptionalInfo) => Promise<void>
@@ -165,14 +166,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      if (!user.emailVerified) {
+      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+      const firebaseUser = userCredential.user;
+      if (!firebaseUser.emailVerified) {
         toast.error('Please verify your email before logging in');
         await signOut(auth);
-        return;
+        const error = new Error('EMAIL_NOT_VERIFIED');
+        error.name = 'EmailNotVerifiedError';
+        throw error;
       }
-      toast.success('Successfully logged in!')
+      toast.success('Successfully logged in!');
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error.message || 'Failed to login');
@@ -182,6 +185,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signup = async (username: string, email: string, password: string) => {
     const trimmedUsername = username.trim();
+    if (trimmedUsername.includes('@')) throw new Error('Username cannot contain the @ symbol.');
     if (trimmedUsername.length < 3) throw new Error('Username must be at least 3 characters long.');
 
     let firebaseUser: User | null = null;
@@ -194,16 +198,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Sync user immediately to create new document.
       await syncUserWithBackend(firebaseUser, trimmedUsername);
       await sendEmailVerification(firebaseUser);
-      toast.success('Registration successful! Please check your email to verify your account.');
+      toast.success('Successfully signed up with email! Please check your inbox to verify your account.');
 
       // Do not log in user immediately after registration
       await signOut(auth);
     } catch (error: any) {
-      console.error('Registration error:', error);
+      console.error('Sign up error:', error);
       toast.error(error.message || 'Failed to sign up');
       throw error;
     }
   }
+
+  const resendVerificationEmail = async (email: string, password: string) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+      const firebaseUser = userCredential.user;
+
+      if (firebaseUser.emailVerified) {
+        await signOut(auth);
+        throw new Error('Your email is already verified. Please log in.');
+      }
+
+      await sendEmailVerification(firebaseUser);
+      await signOut(auth);
+      toast.success('Verification link sent successfully! Please check your inbox.');
+
+    } catch (error: any) {
+      if (auth.currentUser) await signOut(auth);
+      throw error;
+    }
+  };
 
   const googleSignIn = async (chosenUsername?: string) => {
     googleAuthInProgress.current = true;
@@ -217,47 +241,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!firebaseUser.email) throw new Error('Google account does not have an email address.');
 
-      try {
-        // First, attempt to synchronize an existing MongoDB user.
+      if (chosenUsername !== undefined) {
+        // Google SIGNUP
+        const trimmedUsername = chosenUsername.trim();
+        if (trimmedUsername.includes('@')) throw new Error('Username cannot contain the @ symbol.');
+        if (trimmedUsername.length < 3) throw new Error('Username must be at least 3 characters long.');
+        // The backend independently verifies username uniqueness.
+        await syncUserWithBackend(firebaseUser, trimmedUsername);
+        toast.success('Successfully signed up with Google!');
+      } else {
+        // Google LOGIN: existing MongoDB account only.
         await syncUserWithBackend(firebaseUser);
-      } catch (error: unknown) {
-        console.error('Google authentication error:', error);
-        if (auth.currentUser) await signOut(auth);
-
-        const message = error instanceof Error ? error.message : 'Google sign-in failed. Please try again.';
-        toast.error(message);
-
-        // A new MongoDB user must provide a username.
-        if (message.includes('Username is required') && chosenUsername) {
-          const trimmedUsername = chosenUsername.trim();
-          if (trimmedUsername.length < 3) throw new Error('Username must be at least 3 characters long.');
-
-          // Create the new MongoDB user with the chosen username.
-          await syncUserWithBackend(firebaseUser, trimmedUsername);
-
-        } else if (message.includes('Username is required')) {
-          throw new Error('This Google account is not registered yet. Please sign up first and choose a username.');
-        } else {
-          throw error;
-        }
-      } finally {
-        googleAuthInProgress.current = false;
+        toast.success('Successfully logged in with Google!');
       }
 
-      toast.success('Successfully signed in with Google!');
-    } catch (error: unknown) {
+      // Do not sign out. The user remains authenticated.
+    } catch (error: any) {
       console.error('Google authentication error:', error);
 
-      // Avoid leaving an authenticated Firebase session without
-      // a successfully synchronized MongoDB account.
+      // Never leave a Firebase session without a successfully synchronized MongoDB account.
       if (auth.currentUser) await signOut(auth);
 
-      const message = error instanceof Error
-        ? error.message
-        : 'Google sign-in failed. Please try again.';
+      if (error.message?.includes('Username is required') && chosenUsername === undefined) {
+        throw new Error('This Google account is not registered. Please sign up first.');
+      }
 
-      toast.error(message);
       throw error;
+    } finally {
+      googleAuthInProgress.current = false;
     }
   };
 
@@ -328,6 +339,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     signup,
     googleSignIn,
+    resendVerificationEmail,
     logout,
     resetPassword,
     updateProfile,
