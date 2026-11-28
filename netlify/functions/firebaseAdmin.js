@@ -21,28 +21,32 @@ if (getApps().length === 0) {
 
 const auth = getAuth(app);
 
-const getAuthenticatedUserId = async (event) => {
+const getAuthenticatedUser = async (event) => {
   const authorization =
     event.headers?.authorization ||
     event.headers?.Authorization ||
     '';
 
-  if (!authorization.startsWith('Bearer ')) {
+  if (!authorization.startsWith('Bearer '))
     return null;
-  }
 
   const idToken = authorization.slice(7);
 
   try {
-    const decodedToken = await auth.verifyIdToken(idToken);
-    return decodedToken.uid;
+    return await auth.verifyIdToken(idToken);
   } catch (error) {
     console.error('Firebase token verification failed:', error);
     return null;
   }
 };
 
+const getAuthenticatedUserId = async (event) => {
+  const decodedToken = await getAuthenticatedUser(event);
+  return decodedToken?.uid || null;
+};
+
 module.exports = {
   auth,
+  getAuthenticatedUser,
   getAuthenticatedUserId,
 };

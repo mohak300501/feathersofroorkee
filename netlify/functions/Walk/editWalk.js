@@ -27,54 +27,42 @@ exports.handler = async (event, context) => {
     const { walkId, title, info, datetime, location, mapPin, limit, userId } = requestData;
 
     if (!walkId || !userId) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Missing required fields' }),
-      };
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing required fields' }) };
     }
 
     if (!ObjectId.isValid(walkId)) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Invalid walk ID format' }),
-      };
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid walk ID format' }) };
     }
 
     const authenticatedUserId = await getAuthenticatedUserId(event);
-    if (!authenticatedUserId || authenticatedUserId !== userId) {
+    if (!authenticatedUserId || authenticatedUserId !== userId)
       return { statusCode: 401, headers, body: JSON.stringify({ error: 'Authentication required' }) };
-    }
 
     const db = await connectToDatabase(context);
 
     // Verify user is strictly admin
     const user = await db.collection('users').findOne({ uid: authenticatedUserId });
-    if (!user || user.userType !== 0) {
-      return {
-        statusCode: 403,
-        headers,
-        body: JSON.stringify({ error: 'Admin privileges required' }),
-      };
-    }
+    if (!user || user.userType !== 0)
+      return { statusCode: 403, headers, body: JSON.stringify({ error: 'Admin privileges required' }) };
 
     const updateFields = {};
-    if (title !== undefined) updateFields.title = title;
-    if (info !== undefined) updateFields.info = info;
+    if (title !== undefined)
+      updateFields.title = title;
+    if (info !== undefined)
+      updateFields.info = info;
     if (datetime) {
       const d = new Date(datetime);
-      if (!isNaN(d.getTime())) {
+      if (!isNaN(d.getTime()))
         updateFields.datetime = d;
-      }
     }
-    if (location !== undefined) updateFields.location = location;
-    if (mapPin !== undefined) updateFields.mapPin = mapPin;
+    if (location !== undefined)
+      updateFields.location = location;
+    if (mapPin !== undefined)
+      updateFields.mapPin = mapPin;
     if (limit !== undefined) {
       const parsedLimit = parseInt(limit, 10);
-      if (!isNaN(parsedLimit) && parsedLimit > 0) {
+      if (!isNaN(parsedLimit) && parsedLimit > 0)
         updateFields.limit = parsedLimit;
-      }
     }
 
     const result = await db.collection('walks').updateOne(
@@ -82,25 +70,11 @@ exports.handler = async (event, context) => {
       { $set: updateFields }
     );
 
-    if (result.matchedCount === 0) {
-      return {
-        statusCode: 404,
-        headers,
-        body: JSON.stringify({ error: 'Walk not found' }),
-      };
-    }
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ success: true }),
-    };
+    if (result.matchedCount === 0)
+      return { statusCode: 404, headers, body: JSON.stringify({ error: 'Walk not found' }) };
+    return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
   } catch (error) {
     console.error('Error editing walk:', error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: 'Internal server error', details: error.message }),
-    };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal server error', details: error.message }) };
   }
 };

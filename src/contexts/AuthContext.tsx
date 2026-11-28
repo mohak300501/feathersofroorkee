@@ -8,6 +8,7 @@ import {
   signInWithPopup,
   signOut,
   onAuthStateChanged,
+  reload,
   sendEmailVerification,
   sendPasswordResetEmail
 } from 'firebase/auth'
@@ -36,7 +37,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>
   signup: (username: string, email: string, password: string) => Promise<void>
   googleSignIn: (username?: string) => Promise<void>
-  resendVerificationEmail: (email: string, password: string) => Promise<void>
+  sendVerificationEmail: () => Promise<void>
   logout: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
   updateProfile: (newUsername: string, newWhatsapp: string, newOptionalInfo?: OptionalInfo) => Promise<void>
@@ -165,23 +166,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
+    await signInWithEmailAndPassword(auth, email.trim(), password);
+    toast.success('Successfully logged in!');
+  }
+
+  const sendVerificationEmail = async () => {
+    if (!user) throw new Error('Please log in first.');
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
-      const firebaseUser = userCredential.user;
-      if (!firebaseUser.emailVerified) {
-        toast.error('Please verify your email before logging in');
-        await signOut(auth);
-        const error = new Error('EMAIL_NOT_VERIFIED');
-        error.name = 'EmailNotVerifiedError';
-        throw error;
+      await reload(user);
+      if (user.emailVerified) {
+        toast.success('Your email is already verified.');
+        return;
       }
-      toast.success('Successfully logged in!');
+      await sendEmailVerification(user);
+      toast.success('Verification link sent! Please check your inbox.');
     } catch (error: any) {
-      console.error('Login error:', error);
-      toast.error(error.message || 'Failed to login');
+      console.error('Verification email error:', error);
+      toast.error(error.message || 'Unable to send verification email.');
       throw error;
     }
-  }
+  };
 
   const signup = async (username: string, email: string, password: string) => {
     const trimmedUsername = username.trim();
@@ -208,26 +212,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw error;
     }
   }
-
-  const resendVerificationEmail = async (email: string, password: string) => {
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
-      const firebaseUser = userCredential.user;
-
-      if (firebaseUser.emailVerified) {
-        await signOut(auth);
-        throw new Error('Your email is already verified. Please log in.');
-      }
-
-      await sendEmailVerification(firebaseUser);
-      await signOut(auth);
-      toast.success('Verification link sent successfully! Please check your inbox.');
-
-    } catch (error: any) {
-      if (auth.currentUser) await signOut(auth);
-      throw error;
-    }
-  };
 
   const googleSignIn = async (chosenUsername?: string) => {
     googleAuthInProgress.current = true;
@@ -339,7 +323,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     signup,
     googleSignIn,
-    resendVerificationEmail,
+    sendVerificationEmail,
     logout,
     resetPassword,
     updateProfile,

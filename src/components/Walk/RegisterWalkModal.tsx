@@ -12,22 +12,22 @@ interface RegisterWalkModalProps {
 }
 
 const RegisterWalkModal = ({ walkId, walkTitle, availableSlots, onClose, onSuccess }: RegisterWalkModalProps) => {
-  const { user } = useAuth()
-  const [slots, setSlots] = useState(1)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const { user } = useAuth();
+  const [slots, setSlots] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const maxSelectable = Math.min(3, Math.max(1, availableSlots))
+  const maxSelectable = Math.min(3, Math.max(1, availableSlots));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (slots < 1 || slots > availableSlots) {
-      setError(`Please select between 1 and ${availableSlots} slots.`)
-      return
+      setError(`Please select between 1 and ${availableSlots} slots.`);
+      return;
     }
 
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError('');
 
     try {
       const payload = {
@@ -35,8 +35,8 @@ const RegisterWalkModal = ({ walkId, walkTitle, availableSlots, onClose, onSucce
         slots,
         userId: user?.uid
       }
-      const token = await user?.getIdToken()
-      if (!token) throw new Error('Please login to register for walks')
+      const token = await user?.getIdToken(true);
+      if (!token) throw new Error('Please login to register for walks');
 
       const response = await fetch('/api/Walk/registerWalk', {
         method: 'POST',
@@ -45,19 +45,19 @@ const RegisterWalkModal = ({ walkId, walkTitle, availableSlots, onClose, onSucce
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(payload)
-      })
+      });
 
-      const data = await parseApiResponse<{ success?: boolean; error?: string }>(response)
+      const data = await parseApiResponse<{ success?: boolean; error?: string }>(response);
       if (data && data.success) {
-        onSuccess()
+        onSuccess();
       } else {
-        setError(data?.error || 'Failed to complete registration')
+        setError(data?.error || 'Failed to complete registration');
       }
     } catch (err: unknown) {
-      console.error(err)
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred.')
+      console.error(err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -91,7 +91,7 @@ const RegisterWalkModal = ({ walkId, walkTitle, availableSlots, onClose, onSucce
               className="w-44 h-44 object-contain rounded-lg border border-slate-200 p-2 bg-white"
             />
             <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 text-center">
-              Scan to join the BirdWalks WhatsApp group
+              Scan to join the BirdWalks WhatsApp group.
             </p>
           </div>
 

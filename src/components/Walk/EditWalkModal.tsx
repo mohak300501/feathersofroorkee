@@ -8,51 +8,51 @@ interface EditWalkModalProps {
   walk: Walk
   onClose: () => void
   onSuccess: () => void
-}
+};
 
 const EditWalkModal = ({ walk, onClose, onSuccess }: EditWalkModalProps) => {
-  const { user } = useAuth()
+  const { user } = useAuth();
 
   // Initialize with existing walk data safely
-  let localISOTime = ''
+  let localISOTime = '';
   try {
-    const dateObj = new Date(walk.datetime)
+    const dateObj = new Date(walk.datetime);
     if (!isNaN(dateObj.getTime())) {
-      const tzOffset = dateObj.getTimezoneOffset() * 60000
-      localISOTime = new Date(dateObj.getTime() - tzOffset).toISOString().slice(0, 16)
+      const tzOffset = dateObj.getTimezoneOffset() * 60000;
+      localISOTime = new Date(dateObj.getTime() - tzOffset).toISOString().slice(0, 16);
     }
   } catch {
-    localISOTime = ''
+    localISOTime = '';
   }
 
-  const [title, setTitle] = useState(walk.title || '')
-  const [info, setInfo] = useState(walk.info || '')
-  const [datetime, setDatetime] = useState(localISOTime)
-  const [location, setLocation] = useState(walk.location || '')
-  const [mapPin, setMapPin] = useState(walk.mapPin || '')
-  const [limit, setLimit] = useState<number>(walk.limit || 25)
+  const [title, setTitle] = useState(walk.title || '');
+  const [info, setInfo] = useState(walk.info || '');
+  const [datetime, setDatetime] = useState(localISOTime);
+  const [location, setLocation] = useState(walk.location || '');
+  const [mapPin, setMapPin] = useState(walk.mapPin || '');
+  const [limit, setLimit] = useState<number>(walk.limit || 25);
 
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!title || !info || !datetime || !location) {
-      setError('Please fill all required fields.')
-      return
+      setError('Please fill all required fields.');
+      return;
     }
 
     if (limit < 1) {
-      setError('Participant limit must be at least 1.')
-      return
+      setError('Participant limit must be at least 1.');
+      return;
     }
 
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError('');
 
     try {
-      if (!user) throw new Error('Please login to edit this walk.')
-      const token = await user.getIdToken()
+      if (!user) throw new Error('Please login to edit this walk.');
+      const token = await user.getIdToken();
       const payload = {
         walkId: walk._id,
         title,
@@ -62,7 +62,7 @@ const EditWalkModal = ({ walk, onClose, onSuccess }: EditWalkModalProps) => {
         mapPin,
         limit: Number(limit),
         userId: user?.uid
-      }
+      };
 
       const response = await fetch('/api/Walk/editWalk', {
         method: 'PUT',
@@ -71,19 +71,19 @@ const EditWalkModal = ({ walk, onClose, onSuccess }: EditWalkModalProps) => {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(payload)
-      })
+      });
 
-      const data = await parseApiResponse<{ success?: boolean; error?: string }>(response)
+      const data = await parseApiResponse<{ success?: boolean; error?: string }>(response);
       if (data && data.success) {
-        onSuccess()
+        onSuccess();
       } else {
-        setError(data?.error || 'Failed to update walk')
+        setError(data?.error || 'Failed to update walk');
       }
     } catch (err: unknown) {
-      console.error(err)
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred.')
+      console.error(err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -218,4 +218,4 @@ const EditWalkModal = ({ walk, onClose, onSuccess }: EditWalkModalProps) => {
   )
 }
 
-export default EditWalkModal
+export default EditWalkModal;

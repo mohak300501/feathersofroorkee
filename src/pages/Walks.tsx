@@ -8,46 +8,46 @@ import type { Walk } from '../interfaces/Walk'
 import toast from 'react-hot-toast'
 
 const Walks = () => {
-  const { user, isAdmin } = useAuth()
-  const [walks, setWalks] = useState<Walk[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const { user, isAdmin } = useAuth();
+  const [walks, setWalks] = useState<Walk[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const fetchWalks = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await fetch('/api/Walk/getWalks')
-      const data = await response.json()
+      const response = await fetch('/api/Walk/getWalks');
+      const data = await response.json();
       if (response.ok) {
-        setWalks(data)
+        setWalks(data);
       } else {
-        console.error('Failed to fetch walks:', data.error)
-        toast.error(data.error || 'Failed to fetch walks')
+        console.error('Failed to fetch walks:', data.error);
+        toast.error(data.error || 'Failed to fetch walks');
       }
     } catch (error) {
-      console.error('Error fetching walks:', error)
-      toast.error('Network error loading walks')
+      console.error('Error fetching walks:', error);
+      toast.error('Network error loading walks');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchWalks()
+    fetchWalks();
   }, [])
 
   // Group by month and year
   const groupedWalks = walks.reduce((acc, walk) => {
-    const date = new Date(walk.datetime)
+    const date = new Date(walk.datetime);
     const monthYear = !isNaN(date.getTime())
       ? date.toLocaleString('default', { month: 'long', year: 'numeric' })
       : 'Upcoming'
     if (!acc[monthYear]) {
-      acc[monthYear] = []
+      acc[monthYear] = [];
     }
-    acc[monthYear].push(walk)
-    return acc
-  }, {} as Record<string, Walk[]>)
+    acc[monthYear].push(walk);
+    return acc;
+  }, {} as Record<string, Walk[]>);
 
   return (
     <div className="space-y-12 animate-fade-in relative z-10">
@@ -165,7 +165,7 @@ const Walks = () => {
         />
       )}
     </div>
-  )
+  );
 }
 
-export default Walks
+export default Walks;

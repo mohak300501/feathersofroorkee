@@ -18,11 +18,7 @@ exports.handler = async (event, context) => {
   if (method) return method;
 
   try {
-    const {
-      binocId,
-      make: rawMake,
-      physicalId: rawPhysicalId,
-    } = JSON.parse(event.body || '{}');
+    const { binocId, make: rawMake, physicalId: rawPhysicalId } = JSON.parse(event.body || '{}');
     const userId = await getAuthenticatedUserId(event);
     if (!userId) return response(401, { error: 'Authentication required' });
 
@@ -36,18 +32,10 @@ exports.handler = async (event, context) => {
     const binocular = await db.collection('binoculars').findOne({ binocId });
     if (!binocular) return response(404, { error: 'Binocular not found' });
 
-    const duplicate = await db.collection('binoculars').findOne({
-      physicalId,
-      binocId: { $ne: binocId },
-    });
+    const duplicate = await db.collection('binoculars').findOne({ physicalId, binocId: { $ne: binocId } });
     if (duplicate) return response(409, { error: 'Another binocular already uses this Physical ID' });
 
-    const payload = {
-      binocId: binocular.binocId,
-      make,
-      physicalId,
-      addedAt: new Date(binocular.addedAt).toISOString(),
-    };
+    const payload = { binocId: binocular.binocId, make, physicalId, addedAt: new Date(binocular.addedAt).toISOString() };
     const hash = encryptBinocularPayload(payload);
 
     await db.collection('binoculars').updateOne(
@@ -57,14 +45,9 @@ exports.handler = async (event, context) => {
       }
     );
 
-    return response(200, {
-      success: true,
-      binocular: publicBinocular({ ...binocular, make, physicalId, hash }),
-    });
+    return response(200, { success: true, binocular: publicBinocular({ ...binocular, make, physicalId, hash }) });
   } catch (error) {
     console.error('editBinocular error:', error);
-    return response(error.statusCode || 500, {
-      error: error.statusCode ? error.message : 'Internal server error',
-    });
+    return response(error.statusCode || 500, { error: error.statusCode ? error.message : 'Internal server error' });
   }
 };

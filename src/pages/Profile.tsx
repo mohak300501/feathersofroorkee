@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
-import { useAuth } from '../contexts/AuthContext'
-import { DEPT_MAP } from '../utils/dept_map'
-import { User, Mail, Phone, Save, Camera } from 'lucide-react'
-import toast from 'react-hot-toast'
-import { compressImage } from '../utils/imageCompressor'
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { DEPT_MAP } from '../utils/dept_map';
+import { User, Mail, Phone, Save, Camera, CheckCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { compressImage } from '../utils/imageCompressor';
+import { reload } from 'firebase/auth';
 
 const institutions = [
   'IITR Indian Institute of Technology Roorkee',
@@ -23,13 +24,15 @@ const professions = ['Artist', 'Doctor', 'Engineer', 'Business', 'Armed Forces',
 const genders = ['Male', 'Female', 'Other']
 
 const Profile = () => {
-  const { user, username: currentUsername, userPhoto: currentUserPhoto, whatsapp: currentWhatsapp, optionalInfo, updateProfile, updateUserPhoto } = useAuth()
+  const { user, sendVerificationEmail, username: currentUsername, userPhoto: currentUserPhoto, whatsapp: currentWhatsapp, optionalInfo, updateProfile, updateUserPhoto } = useAuth()
 
   const [username, setUsername] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
   const [loading, setLoading] = useState(false)
   const [userPhoto, setUserPhoto] = useState<string | null>(currentUserPhoto)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [emailVerified, setEmailVerified] = useState(user?.emailVerified ?? false)
+  const [sendingVerification, setSendingVerification] = useState(false)
 
   const [institution, setInstitution] = useState('')
   const [designation, setRole] = useState('')
@@ -59,6 +62,19 @@ const Profile = () => {
     setAge(optionalInfo.age)
     setGender(optionalInfo.gender)
   }, [optionalInfo])
+
+  useEffect(() => {
+    if (!user) return;
+    void refreshEmailVerificationStatus();
+    // Refresh when user returns to this tab after clicking verification link in their email.
+    const handleWindowFocus = () => {
+      void refreshEmailVerificationStatus();
+    }
+    window.addEventListener('focus', handleWindowFocus);
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus);
+    }
+  }, [user])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,6 +149,29 @@ const Profile = () => {
     }
   }
 
+  const refreshEmailVerificationStatus = async () => {
+    if (!user) return;
+    try {
+      await reload(user);
+      setEmailVerified(user.emailVerified);
+    } catch (error) {
+      console.error('Error refreshing email verification status:', error);
+    }
+  }
+
+  const handleResendVerificationEmail = async () => {
+    if (!user || sendingVerification) return;
+    setSendingVerification(true);
+    try {
+      await sendVerificationEmail();
+      await refreshEmailVerificationStatus();
+    } catch (error) {
+      // sendVerificationEmail already displays the error toast.
+    } finally {
+      setSendingVerification(false);
+    }
+  }
+
   if (!user) return null;
 
   return (
@@ -171,10 +210,10 @@ const Profile = () => {
         </aside>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div id="account-details" className="glass rounded-2xl p-8 shadow-xl animate-fade-in scroll-mt-24">
-            <div className="mb-8">
+          <div id="account-details" className="flex flex-col gap-3 glass rounded-2xl p-8 shadow-xl animate-fade-in scroll-mt-24">
+            <div className="mb-2">
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Account Details</h2>
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 Update your account details.
               </p>
             </div>
@@ -194,6 +233,45 @@ const Profile = () => {
               </div>
               <p className="mt-1 text-xs text-slate-500">Email address cannot be changed.</p>
             </div>
+
+            {!emailVerified ? (
+              <div className="rounded-xl border border-red-300 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/30">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-semibold text-red-800 dark:text-red-300">
+                      Email address not verified
+                    </p>
+                    <p className="mt-1 text-sm text-red-700 dark:text-red-400">
+                      Please verify your email address. Email verification is required
+                      to register for BirdWalks.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleResendVerificationEmail}
+                    disabled={sendingVerification}
+                    className="shrink-0 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {sendingVerification ? 'Sending...' : 'Resend verification link'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-green-300 bg-green-50 p-3 dark:border-green-800 dark:bg-green-950/30">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
+                  <div>
+                    <p className="font-semibold text-sm text-green-800 dark:text-green-300">
+                      Email address verified
+                    </p>
+                    <p className="mt-1 text-xs text-green-700 dark:text-green-400">
+                      Your email address has been already verified.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -233,10 +311,10 @@ const Profile = () => {
 
           </div>
 
-          <div id="optional-info" className="glass rounded-2xl p-8 shadow-xl animate-fade-in scroll-mt-24">
-            <div className="mb-8">
+          <div id="optional-info" className="flex flex-col gap-3 glass rounded-2xl p-8 shadow-xl animate-fade-in scroll-mt-24">
+            <div className="mb-2">
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Optional Info</h2>
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 Updating this info will help us generate anonymous stats.<br />
                 Rest assured, this info won't be displayed publicly.
               </p>

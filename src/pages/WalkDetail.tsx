@@ -1,73 +1,74 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import LoadingSpinner from '../components/General/LoadingSpinner'
-import WalkPhotos from '../components/Walk/WalkPhotos'
-import WalkExperiences from '../components/Walk/WalkExperiences'
-import AddWalkPhotoModal from '../components/Walk/AddWalkPhotoModal'
-import EditWalkModal from '../components/Walk/EditWalkModal'
-import RegisterWalkModal from '../components/Walk/RegisterWalkModal'
-import type { WalkDetail as WalkDetailType, WalkExperience } from '../interfaces/Walk'
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import LoadingSpinner from '../components/General/LoadingSpinner';
+import WalkPhotos from '../components/Walk/WalkPhotos';
+import WalkExperiences from '../components/Walk/WalkExperiences';
+import AddWalkPhotoModal from '../components/Walk/AddWalkPhotoModal';
+import EditWalkModal from '../components/Walk/EditWalkModal';
+import RegisterWalkModal from '../components/Walk/RegisterWalkModal';
+import type { WalkDetail as WalkDetailType, WalkExperience } from '../interfaces/Walk';
 import {
   Calendar, MapPin, Users, Edit, Trash2, Camera, ExternalLink, ArrowLeft,
   Plus, X, CheckCircle, Download, Clock, Pen
-} from 'lucide-react'
-import toast from 'react-hot-toast'
-import { parseApiResponse } from '../utils/imageCompressor'
+} from 'lucide-react';
+import toast from 'react-hot-toast';
+import { parseApiResponse } from '../utils/imageCompressor';
+import { reload } from 'firebase/auth';
 
 const WalkDetail = () => {
-  const { walkCode } = useParams<{ walkCode: string }>()
-  const navigate = useNavigate()
-  const { user, isAdmin } = useAuth()
+  const { walkCode } = useParams<{ walkCode: string }>();
+  const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
 
-  const [walk, setWalk] = useState<WalkDetailType | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'photos' | 'experiences'>('photos')
-  const [error, setError] = useState<string | null>(null)
+  const [walk, setWalk] = useState<WalkDetailType | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'photos' | 'experiences'>('photos');
+  const [error, setError] = useState<string | null>(null);
 
   // Modals state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [isAddPhotoModalOpen, setIsAddPhotoModalOpen] = useState(false)
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [isCancellingRegistration, setIsCancellingRegistration] = useState(false)
-  const [isLoadingRegistration, setIsLoadingRegistration] = useState(false)
-  const [userRegistration, setUserRegistration] = useState<{ slots: number } | null>(null)
-  const [registeredParticipants, setRegisteredParticipants] = useState<{ username: string; whatsapp: string; slots: number }[]>([])
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddPhotoModalOpen, setIsAddPhotoModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isCancellingRegistration, setIsCancellingRegistration] = useState(false);
+  const [isLoadingRegistration, setIsLoadingRegistration] = useState(false);
+  const [userRegistration, setUserRegistration] = useState<{ slots: number } | null>(null);
+  const [registeredParticipants, setRegisteredParticipants] = useState<{ username: string; whatsapp: string; slots: number }[]>([]);
 
   const fetchWalkDetail = useCallback(async () => {
-    if (!walkCode) return
-    setLoading(true)
-    setError(null)
+    if (!walkCode) return;
+    setLoading(true);
+    setError(null);
     try {
-      const response = await fetch(`/api/Walk/getWalk?walkCode=${walkCode}`)
+      const response = await fetch(`/api/Walk/getWalk?walkCode=${walkCode}`);
       if (!response.ok) {
         if (response.status === 404) {
-          setError('Walk not found')
+          setError('Walk not found');
         } else {
-          setError('Failed to fetch walk details')
+          setError('Failed to fetch walk details');
         }
-        return
+        return;
       }
-      const data = await response.json()
-      setWalk(data)
+      const data = await response.json();
+      setWalk(data);
     } catch (err) {
-      console.error('Error fetching walk:', err)
-      setError('Network error loading walk details')
+      console.error('Error fetching walk:', err);
+      setError('Network error loading walk details');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [walkCode])
+  }, [walkCode]);
 
   useEffect(() => {
-    fetchWalkDetail()
-  }, [fetchWalkDetail])
+    fetchWalkDetail();
+  }, [fetchWalkDetail]);
 
   const fetchWalkRegistration = useCallback(async () => {
     if (!walk || !user) {
-      setUserRegistration(null)
-      setRegisteredParticipants([])
-      return
+      setUserRegistration(null);
+      setRegisteredParticipants([]);
+      return;
     }
 
     setIsLoadingRegistration(true)
@@ -84,36 +85,34 @@ const WalkDetail = () => {
         error?: string
         registration?: { slots: number } | null
         registrations?: { username: string; whatsapp: string; slots: number }[]
-      }
+      };
 
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(data.error || 'Failed to fetch walk registrations');
-      }
 
       // Verify that the backend actually returned the expected property.
-      if (!Object.prototype.hasOwnProperty.call(data, 'registration')) {
+      if (!Object.prototype.hasOwnProperty.call(data, 'registration'))
         throw new Error('Invalid registration API response');
-      }
 
       setUserRegistration(data.registration ?? null);
-      // The backend only supplies this array to authorized admins.
       setRegisteredParticipants(isAdmin ? data.registrations ?? [] : []);
 
     } catch (err: unknown) {
-      console.error('Error fetching walk registration:', err)
-      toast.error(err instanceof Error ? err.message : 'Failed to fetch walk registration')
+      console.error('Error fetching walk registration:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to fetch walk registration');
     } finally {
-      setIsLoadingRegistration(false)
+      setIsLoadingRegistration(false);
     }
-  }, [walk, user, isAdmin])
+  }, [walk, user, isAdmin]);
 
   useEffect(() => {
-    fetchWalkRegistration()
-  }, [fetchWalkRegistration])
+    fetchWalkRegistration();
+  }, [fetchWalkRegistration]);
 
   const handleAddWalkExperience = async (info: string) => {
-    if (!walk || !user) throw new Error('Please login to share your experience.')
-    const token = await user.getIdToken()
+    if (!walk || !user)
+      throw new Error('Please login to share your experience.');
+    const token = await user.getIdToken();
     const response = await fetch('/api/Walk/addWalkExperience', {
       method: 'POST',
       headers: {
@@ -121,13 +120,12 @@ const WalkDetail = () => {
         Authorization: `Bearer ${token}`
       },
       body: JSON.stringify({ walkId: walk._id, userId: user.uid, info })
-    })
-    const result = await parseApiResponse<{ success?: boolean; experience?: WalkExperience }>(response)
-    if (!result.success) {
-      throw new Error('The server did not confirm the saved experience.')
-    }
+    });
+    const result = await parseApiResponse<{ success?: boolean; experience?: WalkExperience }>(response);
+    if (!result.success)
+      throw new Error('The server did not confirm the saved experience.');
 
-    const newExperience = result.experience
+    const newExperience = result.experience;
     if (newExperience?.id && newExperience.addedAt) {
       setWalk((current) => current
         ? {
@@ -137,36 +135,35 @@ const WalkDetail = () => {
             ...(current.walkExperiences ?? []).filter((item) => item.id !== newExperience.id)
           ]
         }
-        : current)
-      toast.success('Experience shared successfully')
-      return
+        : current);
+      toast.success('Experience shared successfully');
+      return;
     }
 
     try {
-      const query = new URLSearchParams({ walkCode: walk.walkCode })
-      const refreshResponse = await fetch(`/api/Walk/getWalk?${query}`)
-      if (!refreshResponse.ok) {
-        throw new Error(`Failed to refresh walk experiences (${refreshResponse.status})`)
-      }
+      const query = new URLSearchParams({ walkCode: walk.walkCode });
+      const refreshResponse = await fetch(`/api/Walk/getWalk?${query}`);
+      if (!refreshResponse.ok)
+        throw new Error(`Failed to refresh walk experiences (${refreshResponse.status})`);
 
-      const refreshedWalk = await refreshResponse.json() as { walkExperiences?: WalkExperience[] }
-      const refreshedExperiences = refreshedWalk.walkExperiences
-      if (!Array.isArray(refreshedExperiences)) {
-        throw new Error('The refreshed walk response did not contain experiences.')
-      }
+      const refreshedWalk = await refreshResponse.json() as { walkExperiences?: WalkExperience[] };
+      const refreshedExperiences = refreshedWalk.walkExperiences;
+      if (!Array.isArray(refreshedExperiences))
+        throw new Error('The refreshed walk response did not contain experiences.');
       setWalk((current) => current
         ? { ...current, walkExperiences: refreshedExperiences }
-        : current)
-      toast.success('Experience shared successfully')
+        : current);
+      toast.success('Experience shared successfully');
     } catch (refreshError: unknown) {
-      console.error('Experience was saved, but the list could not be refreshed:', refreshError)
-      toast.error('Experience was shared, but the list could not be refreshed. Reload the page to view it.')
+      console.error('Experience was saved, but the list could not be refreshed:', refreshError);
+      toast.error('Experience was shared, but the list could not be refreshed. Reload the page to view it.');
     }
   }
 
   const handleEditWalkExperience = async (experienceId: string, info: string) => {
-    if (!user) throw new Error('Please login to edit this experience.')
-    const token = await user.getIdToken()
+    if (!user)
+      throw new Error('Please login to edit this experience.');
+    const token = await user.getIdToken();
     const response = await fetch('/api/Walk/editWalkExperience', {
       method: 'PUT',
       headers: {
@@ -174,45 +171,44 @@ const WalkDetail = () => {
         Authorization: `Bearer ${token}`
       },
       body: JSON.stringify({ experienceId, userId: user.uid, info })
-    })
-    await parseApiResponse(response)
+    });
+    await parseApiResponse(response);
     setWalk((current) => current
       ? {
         ...current,
         walkExperiences: current.walkExperiences.map((item) =>
           item.id === experienceId ? { ...item, info } : item)
       }
-      : current)
-    toast.success('Experience updated successfully')
+      : current);
+    toast.success('Experience updated successfully');
   }
 
   const handleEditWalkPhoto = async (photoId: string, info: string) => {
-    if (!user) throw new Error('Please login to edit this photo.')
-    const token = await user.getIdToken()
+    if (!user)
+      throw new Error('Please login to edit this photo.');
+    const token = await user.getIdToken();
     const response = await fetch('/api/Walk/editWalkPhoto', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ photoId, userId: user.uid, info })
-    })
-    await parseApiResponse(response)
+    });
+    await parseApiResponse(response);
     setWalk((current) => current
       ? {
         ...current,
         walkPhotos: current.walkPhotos.map((photo) =>
           photo._id === photoId ? { ...photo, info } : photo)
       }
-      : current)
-    toast.success('Photo info updated successfully')
+      : current);
+    toast.success('Photo info updated successfully');
   }
 
   const handleDeleteWalkPhoto = async (photoId: string) => {
-    if (!walk || !user) return
-
-    if (!window.confirm('Are you sure you want to delete this photo?')) return
+    if (!walk || !user) return;
+    if (!window.confirm('Are you sure you want to delete this photo?')) return;
 
     try {
-      const token = await user.getIdToken()
-
+      const token = await user.getIdToken();
       const response = await fetch('/api/Walk/deleteWalkPhoto', {
         method: 'POST',
         headers: {
@@ -220,9 +216,9 @@ const WalkDetail = () => {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ walkId: walk._id, photoId, userId: user.uid })
-      })
+      });
 
-      await parseApiResponse(response)
+      await parseApiResponse(response);
 
       setWalk(current => current
         ? {
@@ -232,23 +228,21 @@ const WalkDetail = () => {
           )
         }
         : current
-      )
+      );
 
-      toast.success('Photo deleted successfully')
+      toast.success('Photo deleted successfully');
     } catch (error) {
-      console.error('Error deleting walk photo:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to delete photo')
+      console.error('Error deleting walk photo:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete photo');
     }
   }
 
   const handleDeleteWalkExperience = async (experienceId: string) => {
-    if (!walk || !user) return
-
-    if (!window.confirm('Are you sure you want to delete this experience?')) return
+    if (!walk || !user) return;
+    if (!window.confirm('Are you sure you want to delete this experience?')) return;
 
     try {
-      const token = await user.getIdToken()
-
+      const token = await user.getIdToken();
       const response = await fetch('/api/Walk/deleteWalkExperience', {
         method: 'POST',
         headers: {
@@ -256,9 +250,9 @@ const WalkDetail = () => {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ walkId: walk._id, experienceId, userId: user.uid })
-      })
+      });
 
-      await parseApiResponse(response)
+      await parseApiResponse(response);
 
       setWalk(current => current
         ? {
@@ -268,21 +262,21 @@ const WalkDetail = () => {
           )
         }
         : current
-      )
+      );
 
-      toast.success('Experience deleted successfully')
+      toast.success('Experience deleted successfully');
     } catch (error) {
-      console.error('Error deleting walk experience:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to delete experience')
+      console.error('Error deleting walk experience:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete experience');
     }
   }
 
   const handleCancelRegistration = async () => {
-    if (!walk || !user || !window.confirm('Are you sure you want to cancel your registration?')) return
+    if (!walk || !user || !window.confirm('Are you sure you want to cancel your registration?')) return;
 
-    setIsCancellingRegistration(true)
+    setIsCancellingRegistration(true);
     try {
-      const token = await user.getIdToken()
+      const token = await user.getIdToken();
       const response = await fetch('/api/Walk/cancelWalkRegistration', {
         method: 'DELETE',
         headers: {
@@ -290,16 +284,16 @@ const WalkDetail = () => {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ walkId: walk._id, userId: user.uid })
-      })
-      await parseApiResponse(response)
-      await fetchWalkDetail()
-      await fetchWalkRegistration()
-      toast.success('Registration cancelled successfully')
+      });
+      await parseApiResponse(response);
+      await fetchWalkDetail();
+      await fetchWalkRegistration();
+      toast.success('Registration cancelled successfully');
     } catch (err: unknown) {
-      console.error('Error cancelling walk registration:', err)
-      toast.error(err instanceof Error ? err.message : 'Failed to cancel registration')
+      console.error('Error cancelling walk registration:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to cancel registration');
     } finally {
-      setIsCancellingRegistration(false)
+      setIsCancellingRegistration(false);
     }
   }
 
@@ -315,40 +309,40 @@ const WalkDetail = () => {
         participant.username,
         String(participant.slots)
       ])
-    ]
-    const csv = `\uFEFF${rows.map((row) => row.map(escapeCsvValue).join(',')).join('\r\n')}`
-    const blobUrl = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }))
-    const anchor = document.createElement('a')
-    anchor.href = blobUrl
-    anchor.download = `${walk?.walkCode || 'walk'}-registered-participants.csv`
-    anchor.click()
-    window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000)
+    ];
+    const csv = `\uFEFF${rows.map((row) => row.map(escapeCsvValue).join(',')).join('\r\n')}`;
+    const blobUrl = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const anchor = document.createElement('a');
+    anchor.href = blobUrl;
+    anchor.download = `${walk?.walkCode || 'walk'}-registered-participants.csv`;
+    anchor.click();
+    window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
   }
 
   const handleDeleteWalk = async () => {
-    if (!walk || !user || !isAdmin) return
+    if (!walk || !user || !isAdmin) return;
     const confirmed = window.confirm(
       `Are you sure you want to delete the walk "${walk.title || walk.walkCode}"? This will also remove associated photos.`
-    )
-    if (!confirmed) return
+    );
+    if (!confirmed) return;
 
-    setIsDeleting(true)
+    setIsDeleting(true);
     try {
-      const token = await user.getIdToken()
+      const token = await user.getIdToken();
       const response = await fetch('/api/Walk/deleteWalk', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ walkId: walk._id, userId: user.uid })
-      })
+      });
 
-      await parseApiResponse(response)
-      toast.success('Walk deleted successfully')
-      navigate('/walks')
+      await parseApiResponse(response);
+      toast.success('Walk deleted successfully');
+      navigate('/walks');
     } catch (err: unknown) {
-      console.error('Error deleting walk:', err)
-      toast.error(err instanceof Error ? err.message : 'Failed to delete walk')
+      console.error('Error deleting walk:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to delete walk');
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
   }
 
@@ -357,7 +351,7 @@ const WalkDetail = () => {
       <div className="py-20 flex justify-center items-center">
         <LoadingSpinner />
       </div>
-    )
+    );
   }
 
   if (error || !walk) {
@@ -376,21 +370,21 @@ const WalkDetail = () => {
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
-  const dateObj = new Date(walk.datetime)
-  const isValidDate = !isNaN(dateObj.getTime())
+  const dateObj = new Date(walk.datetime);
+  const isValidDate = !isNaN(dateObj.getTime());
   const isPast = isValidDate && dateObj < new Date()
-  const maxCapacity = walk.limit && walk.limit > 0 ? walk.limit : 25
-  const isFull = walk.bookedSlots >= maxCapacity
-  const availableSlots = Math.max(0, maxCapacity - walk.bookedSlots)
+  const maxCapacity = walk.limit && walk.limit > 0 ? walk.limit : 25;
+  const isFull = walk.bookedSlots >= maxCapacity;
+  const availableSlots = Math.max(0, maxCapacity - walk.bookedSlots);
 
   const posterUrl = walk.featuredPhoto
     ? (walk.featuredPhoto.startsWith('http')
       ? walk.featuredPhoto
       : `${import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT}${walk.featuredPhoto}`)
-    : null
+    : null;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-10 animate-fade-in relative z-10">
@@ -583,13 +577,25 @@ const WalkDetail = () => {
                 </button>
               ) : (!isPast && !isFull) ? (
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (!user) {
-                      toast('Please login to register for walks', { icon: 'ℹ️' })
-                      navigate('/login')
-                      return
+                      toast('Please login to register for walks', { icon: 'ℹ️' });
+                      navigate('/login');
+                      return;
                     }
-                    setIsRegisterModalOpen(true)
+                    try {
+                      await reload(user);
+                      if (!user.emailVerified) {
+                        toast.error('Your email is not verified. Please verify it from your Profile page to register for BirdWalks.');
+                        return;
+                      }
+                      // Refresh the ID token so its email_verified claim is up to date.
+                      await user.getIdToken(true);
+                      setIsRegisterModalOpen(true);
+                    } catch (error) {
+                      console.error('Error checking email verification:', error);
+                      toast.error('Unable to check your email verification status. Please try again.');
+                    }
                   }}
                   className="btn-primary flex-1 min-w-[200px] flex items-center justify-center space-x-2 py-3"
                 >
@@ -744,7 +750,7 @@ const WalkDetail = () => {
         />
       )}
     </div>
-  )
+  );
 }
 
-export default WalkDetail
+export default WalkDetail;

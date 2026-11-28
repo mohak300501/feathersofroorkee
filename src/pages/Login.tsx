@@ -9,7 +9,6 @@ const Login = () => {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [showVerificationLink, setShowVerificationLink] = useState(false)
   const { login, googleSignIn } = useAuth()
   const navigate = useNavigate()
 
@@ -21,10 +20,9 @@ const Login = () => {
       return;
     }
 
-    setLoading(true)
+    setLoading(true);
+    let loginEmail = identifier;
     try {
-      let loginEmail = identifier;
-
       // Check if identifier is not an email
       if (!identifier.includes('@')) {
         let response: Response;
@@ -57,13 +55,12 @@ const Login = () => {
 
       await login(loginEmail, password);
       navigate('/');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      if (error instanceof Error && error.name === 'EmailNotVerifiedError') {
-        toast.error('Your email address has not been verified. Please verify your email before logging in.');
-        setShowVerificationLink(true);
+      if (error.code === 'auth/invalid-credential') {
+        toast.error('Invalid email/username or password.');
       } else {
-        toast.error(error instanceof Error ? error.message : 'Failed to log in. Please try again.');
+        toast.error(error.message || 'Unable to log in. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -72,7 +69,6 @@ const Login = () => {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
-
     try {
       await googleSignIn();
       navigate('/');
@@ -170,22 +166,10 @@ const Login = () => {
                 </button>
               </div>
 
-              <div className="flex items-center justify-end mt-2">
+              <div className="flex justify-end mt-2">
                 <Link to="/forgot-password" className="text-sm font-medium text-primary-600 hover:text-primary-500">
                   Forgot your password?
                 </Link>
-
-                {showVerificationLink && (
-                  <Link
-                    to="/verify-email"
-                    state={{
-                      email: identifier.includes('@') ? identifier : ''
-                    }}
-                    className="text-sm font-medium text-primary-600 hover:text-primary-500"
-                  >
-                    Resend verification link
-                  </Link>
-                )}
               </div>
             </div>
 

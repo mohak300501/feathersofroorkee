@@ -12,16 +12,16 @@ export interface WalkPhotoCardProps {
 }
 
 const WalkPhotoCard = ({ photo, onEditPhoto, onDeletePhoto }: WalkPhotoCardProps) => {
-  const { user, isAdmin } = useAuth()
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isEditing, setIsEditing] = useState(false)
-  const canEdit = Boolean(user && (user.uid === photo.userId || isAdmin))
+  const { user, isAdmin } = useAuth();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const canEdit = Boolean(user && (user.uid === photo.userId || isAdmin));
 
   const imageUrl = photo.imagekitFilePath
     ? (photo.imagekitFilePath.startsWith('http')
       ? photo.imagekitFilePath
       : `${import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT}${photo.imagekitFilePath}`)
-    : (photo.driveFileId ? `https://drive.google.com/thumbnail?id=${photo.driveFileId}&sz=w800` : '')
+    : (photo.driveFileId ? `https://drive.google.com/thumbnail?id=${photo.driveFileId}&sz=w800` : '');
 
   return (
     <>
@@ -67,7 +67,8 @@ const WalkPhotoCard = ({ photo, onEditPhoto, onDeletePhoto }: WalkPhotoCardProps
                 type="button"
                 onClick={(event) => {
                   event.stopPropagation()
-                  void onDeletePhoto(photo._id)
+                  if (window.confirm('Are you sure you want to delete this photo?'))
+                    void onDeletePhoto(photo._id)
                 }}
                 className="p-2 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-lg transition-colors"
                 title="Delete photo"
@@ -79,34 +80,45 @@ const WalkPhotoCard = ({ photo, onEditPhoto, onDeletePhoto }: WalkPhotoCardProps
           )}
         </div>
 
-        {photo.info && (
-          <div className="p-5 flex-1 flex flex-col">
-            <Quote className="w-5 h-5 text-primary-400 dark:text-primary-500 mb-2 shrink-0" />
-            <div className="relative flex-1 flex flex-col">
-              <p className="text-slate-600 dark:text-slate-300 italic text-sm leading-relaxed line-clamp-3 flex-1">
-                "{photo.info}"
-              </p>
-              {photo.info.length > 100 && (
-                <span className="text-primary-600 dark:text-primary-400 text-xs font-bold mt-2">
-                  ... Read More
-                </span>
-              )}
+        <div className="p-5 flex-1 flex flex-col">
+          {photo.info && (
+            <>
+              <Quote className="w-5 h-5 text-primary-400 dark:text-primary-500 mb-2 shrink-0" />
+              <div className="relative flex-1 flex flex-col">
+                <p className="text-slate-600 dark:text-slate-300 italic text-sm leading-relaxed line-clamp-3 flex-1">
+                  "{photo.info}"
+                </p>
+                {photo.info.length > 100 && (
+                  <span className="text-primary-600 dark:text-primary-400 text-xs font-bold mt-2">
+                    ... Read More
+                  </span>
+                )}
+              </div>
+            </>
+          )}
+          {photo.username && (
+            <div className="flex items-center space-x-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700 text-sm font-medium text-slate-500 dark:text-slate-400">
+              <User className="h-4 w-4 shrink-0 text-slate-400" />
+              <span className="text-primary-600 dark:text-primary-400">@{photo.username}</span>
             </div>
-            {photo.username && (
-              <div className="flex items-center space-x-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700 text-sm font-medium text-slate-500 dark:text-slate-400">
-                <User className="h-4 w-4 shrink-0 text-slate-400" />
-                <span className="text-primary-600 dark:text-primary-400">@{photo.username}</span>
-              </div>
-            )}
-            {photo.addedAt && (
-              <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400">
-                <Calendar className="h-4 w-4 shrink-0 text-slate-400" />
-                <span>{format(new Date(photo.addedAt), 'MMM dd, yyyy • HH:mm')}</span>
-              </div>
-            )}
-          </div>
-        )}
+          )}
+          {photo.addedAt && (
+            <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400">
+              <Calendar className="h-4 w-4 shrink-0 text-slate-400" />
+              <span>{format(new Date(photo.addedAt), 'MMM dd, yyyy • HH:mm')}</span>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Edit Photo Modal */}
+      {isEditing && (
+        <EditWalkPhotoModal
+          initialInfo={photo.info || ''}
+          onClose={() => setIsEditing(false)}
+          onSave={(info) => onEditPhoto(photo._id, info)}
+        />
+      )}
 
       {/* Full Screen Modal */}
       {isModalOpen && (
@@ -134,16 +146,6 @@ const WalkPhotoCard = ({ photo, onEditPhoto, onDeletePhoto }: WalkPhotoCardProps
                     <p className="font-bold text-lg text-slate-800 dark:text-white">@{photo.username}</p>
                   </div>
                 )}
-                {isEditing && (
-                  <EditWalkPhotoModal
-                    initialInfo={photo.info || ''}
-                    onClose={() => setIsEditing(false)}
-                    onSave={async (info) => {
-                      await onEditPhoto(photo._id, info)
-                      setIsEditing(false)
-                    }}
-                  />
-                )}
                 <button onClick={() => setIsModalOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-600 dark:text-slate-300"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
                 </button>
@@ -162,7 +164,7 @@ const WalkPhotoCard = ({ photo, onEditPhoto, onDeletePhoto }: WalkPhotoCardProps
         </div>
       )}
     </>
-  )
+  );
 }
 
-export default WalkPhotoCard
+export default WalkPhotoCard;

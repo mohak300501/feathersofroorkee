@@ -33,24 +33,12 @@ exports.handler = async (event, context) => {
 
     const binocId = crypto.randomUUID();
     const addedAt = new Date();
-    const payload = {
-      binocId,
-      make,
-      physicalId,
-      addedAt: addedAt.toISOString(),
-    };
+    const payload = { binocId, make, physicalId, addedAt: addedAt.toISOString() };
     const hash = encryptBinocularPayload(payload);
 
-    await db.collection('binoculars').insertOne({
-      ...payload,
-      addedAt,
-      hash,
-    });
+    await db.collection('binoculars').insertOne({ ...payload, addedAt, hash });
 
-    return response(200, {
-      success: true,
-      binocular: { binocId, make, physicalId, addedAt, hash },
-    });
+    return response(200, { success: true, binocular: { binocId, make, physicalId, addedAt, hash } });
   } catch (error) {
     console.error('addBinocular error:', error);
     return response(error.statusCode || 500, {
